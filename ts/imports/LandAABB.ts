@@ -74,12 +74,12 @@ export class LandAABB {
         return LandAABB.IMPORTS.LandAABB_getRange(this.min, this.max);
     }
 
-    hasPos(pos: IntPos, ignoreY = false): boolean {
+    hasPos(pos: IntPos, includeY = true): boolean {
         return LandAABB.IMPORTS.LandAABB_hasPos(
             this.min,
             this.max,
             pos,
-            ignoreY
+            includeY
         );
     }
 
@@ -100,22 +100,25 @@ export class LandAABB {
 
     /**
      * 两个领地是否满足最小间距
-     * @param pos1 领地1
-     * @param pos2 领地2
-     * @param ignoreY 是否忽略Y轴
+     * @param pos1 范围1
+     * @param pos2 范围2
+     * @param minSpacing 最小间距
+     * @param includeY 是否包含Y轴
      * @returns 是否满足最小间距
      */
     static isComplisWithMinSpacing(
         pos1: LandAABB,
         pos2: LandAABB,
-        ignoreY = false
+        minSpacing: number,
+        includeY = true
     ): boolean {
         return LandAABB.IMPORTS.LandAABB_isComplisWithMinSpacing(
             pos1.min,
             pos1.max,
             pos2.min,
             pos2.max,
-            ignoreY
+            minSpacing,
+            includeY
         );
     }
 

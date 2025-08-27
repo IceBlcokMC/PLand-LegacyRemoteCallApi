@@ -3,7 +3,9 @@
 #include "pland/aabb/LandAABB.h"
 #include "pland/aabb/LandPos.h"
 #include "pland/land/LandContext.h"
+#include "pland/land/LandRegistry.h"
 #include "pland/utils/JSON.h"
+
 
 #include "exports/APIHelper.h"
 

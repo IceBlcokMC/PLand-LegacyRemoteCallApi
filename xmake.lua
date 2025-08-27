@@ -11,18 +11,12 @@ add_requires("levilamina 1.4.1", {configs = {target_type = "server"}})
 add_requires("levibuildscript")
 add_requires("legacyremotecall 0.9.0-rc.1")
 
-local PLandVersion = "0.12.0"
+local PLandVersion = "1897c338d173e05e42bea484d3703ee2b83179e3"
 add_requires("pland "..PLandVersion)
 
 if not has_config("vs_runtime") then
     set_runtimes("MD")
 end
-
-option("target_type")
-    set_default("server")
-    set_showmenu(true)
-    set_values("server", "client")
-option_end()
 
 target("PLand-LegacyRemoteCallApi") -- Change this to your mod name.
     add_rules("@levibuildscript/linkrule")

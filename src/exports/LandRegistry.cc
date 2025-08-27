@@ -1,16 +1,16 @@
-#include "pland/Global.h"
-#include "pland/PLand.h"
+#include "pland/land/LandRegistry.h"
+#include "Pland/PLand.h"
+#include "exports/APIHelper.h"
 #include "pland/Version.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/land/Land.h"
 #include "pland/utils/JSON.h"
 #include <algorithm>
-#include <unordered_map>
 #include <vector>
 
-#include "exports/APIHelper.h"
 
 #include "ExportDef.h"
+
 
 namespace ldapi {
 
@@ -209,10 +209,10 @@ void Export_Class_LandRegistry() {
         return result;
     });
 
-    exportAs("LandRegistry_getPermType", [](std::string const& uuid, int landID, bool ignoreOperator) {
+    exportAs("LandRegistry_getPermType", [](std::string const& uuid, int landID, bool includeOperator) {
         return static_cast<int>(land::PLand::getInstance()
                                     .getLandRegistry()
-                                    ->getPermType(uuid, static_cast<land::LandID>(landID), ignoreOperator));
+                                    ->getPermType(uuid, static_cast<land::LandID>(landID), includeOperator));
     });
 
     exportAs("LandRegistry_getLandAt", [](IntPos const& pos) -> int {

@@ -69,9 +69,9 @@ void Export_Class_LandAABB() {
         return li;
     });
 
-    exportAs("LandAABB_hasPos", [](IntPos const& a, IntPos const& b, IntPos const& pos, bool ignoreY) -> bool {
+    exportAs("LandAABB_hasPos", [](IntPos const& a, IntPos const& b, IntPos const& pos, bool includeY) -> bool {
         auto p = Make(a, b);
-        return p.hasPos(pos.first, ignoreY);
+        return p.hasPos(pos.first, includeY);
     });
 
 
@@ -83,10 +83,10 @@ void Export_Class_LandAABB() {
 
     exportAs(
         "LandAABB_isComplisWithMinSpacing",
-        [](IntPos const& a, IntPos const& b, IntPos const& c, IntPos const& d, bool ignoreY) -> bool {
+        [](IntPos const& a, IntPos const& b, IntPos const& c, IntPos const& d, int minSpacing, bool includeY) -> bool {
             auto p1 = Make(a, b);
             auto p2 = Make(c, d);
-            return land::LandAABB::isComplisWithMinSpacing(p1, p2, ignoreY);
+            return land::LandAABB::isComplisWithMinSpacing(p1, p2, minSpacing, includeY);
         }
     );
 

@@ -429,12 +429,12 @@ export class LandRegistry {
     static getPermType(
         uuid: UUIDs,
         landID = 0,
-        ignoreOperator = false
+        includeOperator = true
     ): LandPermType {
         return LandRegistry.IMPORTS.LandRegistry_getPermType(
             uuid,
             landID,
-            ignoreOperator
+            includeOperator
         );
     }
 
