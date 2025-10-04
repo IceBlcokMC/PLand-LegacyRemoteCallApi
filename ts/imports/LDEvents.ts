@@ -1,4 +1,4 @@
-import { ImportNamespace, LandID, UUIDs } from "../ImportDef.js";
+import { ImportNamespace, LandID, UUID } from "../ImportDef.js";
 
 export type EventType =
     | "PlayerEnterLandEvent"
@@ -37,26 +37,18 @@ type EventParams = {
     PlayerDeleteLandAfterEvent: [player: Player, landID: LandID];
     LandMemberChangeBeforeEvent: [
         player: Player,
-        targetPlayer: UUIDs, // 目标玩家 (被添加/移除的玩家)
+        targetPlayer: UUID, // 目标玩家 (被添加/移除的玩家)
         landID: LandID,
         isAdd: boolean
     ];
     LandMemberChangeAfterEvent: [
         player: Player,
-        targetPlayer: UUIDs, // 目标玩家 (被添加/移除的玩家)
+        targetPlayer: UUID, // 目标玩家 (被添加/移除的玩家)
         landID: LandID,
         isAdd: boolean
     ];
-    LandOwnerChangeBeforeEvent: [
-        playe: Player,
-        newOwner: UUIDs,
-        landID: LandID
-    ];
-    LandOwnerChangeAfterEvent: [
-        playe: Player,
-        newOwner: UUIDs,
-        landID: LandID
-    ];
+    LandOwnerChangeBeforeEvent: [playe: Player, newOwner: UUID, landID: LandID];
+    LandOwnerChangeAfterEvent: [playe: Player, newOwner: UUID, landID: LandID];
     LandRangeChangeBeforeEvent: [
         player: Player,
         landID: LandID,

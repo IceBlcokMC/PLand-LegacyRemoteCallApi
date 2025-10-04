@@ -1,6 +1,7 @@
 #include "pland/land/LandRegistry.h"
 #include "Pland/PLand.h"
 #include "exports/APIHelper.h"
+#include "mc/platform/UUID.h"
 #include "pland/Version.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/land/Land.h"
@@ -17,26 +18,44 @@ namespace ldapi {
 
 void Export_Class_LandRegistry() {
     exportAs("LandRegistry_isOperator", [](std::string const& uuid) -> bool {
-        return land::PLand::getInstance().getLandRegistry()->isOperator(uuid);
+        if (!mce::UUID::canParse(uuid)) {
+            return false;
+        }
+        return land::PLand::getInstance().getLandRegistry()->isOperator(mce::UUID{uuid});
     });
 
     exportAs("LandRegistry_addOperator", [](std::string const& uuid) -> bool {
-        return land::PLand::getInstance().getLandRegistry()->addOperator(uuid);
+        if (!mce::UUID::canParse(uuid)) {
+            return false;
+        }
+        return land::PLand::getInstance().getLandRegistry()->addOperator(mce::UUID{uuid});
     });
 
     exportAs("LandRegistry_removeOperator", [](std::string const& uuid) -> bool {
-        return land::PLand::getInstance().getLandRegistry()->removeOperator(uuid);
+        if (!mce::UUID::canParse(uuid)) {
+            return false;
+        }
+        return land::PLand::getInstance().getLandRegistry()->removeOperator(mce::UUID{uuid});
     });
 
     exportAs("LandRegistry_hasPlayerSettings", [](std::string const& uuid) -> bool {
-        return land::PLand::getInstance().getLandRegistry()->hasPlayerSettings(uuid);
+        if (!mce::UUID::canParse(uuid)) {
+            return false;
+        }
+        return land::PLand::getInstance().getLandRegistry()->hasPlayerSettings(mce::UUID{uuid});
     });
 
     exportAs("LandRegistry_getPlayerSettings", [](std::string const& uuid) -> std::string {
+        if (!mce::UUID::canParse(uuid)) {
+            return {};
+        }
         try {
             // struct -> json -> std::string
-            auto settings = land::PLand::getInstance().getLandRegistry()->getPlayerSettings(uuid);
-            auto j        = land::JSON::structTojson(*settings);
+            auto settings = land::PLand::getInstance().getLandRegistry()->getPlayerSettings(mce::UUID{uuid});
+            if (!settings) {
+                return {};
+            }
+            auto j = land::JSON::structTojson(*settings);
             return j.dump();
         } catch (...) {
             return {};
@@ -44,12 +63,15 @@ void Export_Class_LandRegistry() {
     });
 
     exportAs("LandRegistry_setPlayerSettings", [](std::string const& uuid, std::string const& jsonStr) -> bool {
+        if (!mce::UUID::canParse(uuid)) {
+            return false;
+        }
         try {
             // jsonStr -> json -> struct
             auto json = nlohmann::json::parse(jsonStr);
             auto set  = land::PlayerSettings{};
             land::JSON::jsonToStructNoMerge(json, set);
-            return land::PLand::getInstance().getLandRegistry()->setPlayerSettings(uuid, std::move(set));
+            return land::PLand::getInstance().getLandRegistry()->setPlayerSettings(mce::UUID{uuid}, std::move(set));
         } catch (...) {
             return false;
         }
@@ -66,11 +88,14 @@ void Export_Class_LandRegistry() {
             if (iaabb[0].second != iaabb[1].second) {
                 throw std::runtime_error("LandRegistry_addOrdinaryLand: Invalid AABB");
             }
+            if (!mce::UUID::canParse(owner)) {
+                throw std::runtime_error("LandRegistry_addOrdinaryLand: Invalid owner");
+            }
             auto dimId = iaabb[0].second;
             auto aabb  = toCpp<land::LandAABB>(iaabb);
             aabb.fix();
 
-            auto land   = land::Land::make(aabb, dimId, is3D, owner);
+            auto land   = land::Land::make(aabb, dimId, is3D, mce::UUID{owner});
             auto result = land::PLand::getInstance().getLandRegistry()->addOrdinaryLand(land);
 
             std::vector<std::string> ret;
@@ -172,7 +197,10 @@ void Export_Class_LandRegistry() {
     });
 
     exportAs("LandRegistry_getLands2", [](std::string const& uuid, bool includeShared) -> LandList {
-        auto     lands = land::PLand::getInstance().getLandRegistry()->getLands(uuid, includeShared);
+        if (!mce::UUID::canParse(uuid)) {
+            return {};
+        }
+        auto     lands = land::PLand::getInstance().getLandRegistry()->getLands(mce::UUID{uuid}, includeShared);
         LandList result;
         result.reserve(lands.size());
         std::transform(lands.begin(), lands.end(), std::back_inserter(result), [](auto& land) {
@@ -182,7 +210,10 @@ void Export_Class_LandRegistry() {
     });
 
     exportAs("LandRegistry_getLands3", [](std::string const& uuid, int dimid) -> LandList {
-        auto     lands = land::PLand::getInstance().getLandRegistry()->getLands(uuid, dimid);
+        if (!mce::UUID::canParse(uuid)) {
+            return {};
+        }
+        auto     lands = land::PLand::getInstance().getLandRegistry()->getLands(mce::UUID{uuid}, dimid);
         LandList result;
         result.reserve(lands.size());
         std::transform(lands.begin(), lands.end(), std::back_inserter(result), [](auto& land) {
@@ -212,7 +243,7 @@ void Export_Class_LandRegistry() {
     exportAs("LandRegistry_getPermType", [](std::string const& uuid, int landID, bool includeOperator) {
         return static_cast<int>(land::PLand::getInstance()
                                     .getLandRegistry()
-                                    ->getPermType(uuid, static_cast<land::LandID>(landID), includeOperator));
+                                    ->getPermType(mce::UUID{uuid}, static_cast<land::LandID>(landID), includeOperator));
     });
 
     exportAs("LandRegistry_getLandAt", [](IntPos const& pos) -> int {

@@ -3,7 +3,7 @@ import {
     isIntPos,
     LandID,
     LandPermType,
-    UUIDs,
+    UUID,
 } from "../ImportDef.js";
 import { LandAABB } from "./LandAABB.js";
 
@@ -139,23 +139,23 @@ export class Land {
             table: string
         ) => void,
 
-        Land_getOwner: importAs("Land_getOwner") as (id: LandID) => UUIDs,
+        Land_getOwner: importAs("Land_getOwner") as (id: LandID) => UUID,
 
         Land_setOwner: importAs("Land_setOwner") as (
             id: LandID,
-            owner: UUIDs
+            owner: UUID
         ) => void,
 
-        Land_getMembers: importAs("Land_getMembers") as (id: LandID) => UUIDs[],
+        Land_getMembers: importAs("Land_getMembers") as (id: LandID) => UUID[],
 
         Land_addLandMember: importAs("Land_addLandMember") as (
             id: LandID,
-            uuid: UUIDs
+            uuid: UUID
         ) => void,
 
         Land_removeLandMember: importAs("Land_removeLandMember") as (
             id: LandID,
-            uuid: UUIDs
+            uuid: UUID
         ) => void,
 
         Land_getName: importAs("Land_getName") as (id: LandID) => string,
@@ -186,11 +186,11 @@ export class Land {
         Land_is3D: importAs("Land_is3D") as (id: LandID) => boolean,
         Land_isOwner: importAs("Land_isOwner") as (
             id: LandID,
-            uuid: UUIDs
+            uuid: UUID
         ) => boolean,
         Land_isMember: importAs("Land_isMember") as (
             id: LandID,
-            uuid: UUIDs
+            uuid: UUID
         ) => boolean,
 
         Land_isConvertedLand: importAs("Land_isConvertedLand") as (
@@ -257,7 +257,7 @@ export class Land {
 
         Land_getPermType: importAs("Land_getPermType") as (
             id: LandID,
-            uuid: UUIDs
+            uuid: UUID
         ) => number,
     };
 
@@ -314,23 +314,23 @@ export class Land {
         Land.SYMBOLS.Land_setPermTable(this.mLandId, JSON.stringify(table));
     }
 
-    getOwner(): UUIDs {
+    getOwner(): UUID {
         return Land.SYMBOLS.Land_getOwner(this.mLandId);
     }
 
-    setOwner(owner: UUIDs): void {
+    setOwner(owner: UUID): void {
         Land.SYMBOLS.Land_setOwner(this.mLandId, owner);
     }
 
-    getMembers(): UUIDs[] {
+    getMembers(): UUID[] {
         return Land.SYMBOLS.Land_getMembers(this.mLandId);
     }
 
-    addLandMember(uuid: UUIDs): void {
+    addLandMember(uuid: UUID): void {
         Land.SYMBOLS.Land_addLandMember(this.mLandId, uuid);
     }
 
-    removeLandMember(uuid: UUIDs): void {
+    removeLandMember(uuid: UUID): void {
         Land.SYMBOLS.Land_removeLandMember(this.mLandId, uuid);
     }
 
@@ -362,11 +362,11 @@ export class Land {
         return Land.SYMBOLS.Land_is3D(this.mLandId);
     }
 
-    isOwner(uuid: UUIDs): boolean {
+    isOwner(uuid: UUID): boolean {
         return Land.SYMBOLS.Land_isOwner(this.mLandId, uuid);
     }
 
-    isMember(uuid: UUIDs): boolean {
+    isMember(uuid: UUID): boolean {
         return Land.SYMBOLS.Land_isMember(this.mLandId, uuid);
     }
 
@@ -527,7 +527,7 @@ export class Land {
     /**
      * @brief 获取一个玩家在当前领地所拥有的权限类别
      */
-    getPermType(uuid: UUIDs): LandPermType {
+    getPermType(uuid: UUID): LandPermType {
         return Land.SYMBOLS.Land_getPermType(this.mLandId, uuid);
     }
 }

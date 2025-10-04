@@ -6,7 +6,7 @@ export const ImportNamespace = ExportNamespace;
 export type LandID = number; // uint64_t
 export type ChunkID = number; // uint64_t
 export type LandDimid = number; // int
-export type UUIDs = string; // std::string
+export type UUID = string; // std::string
 
 export enum LandPermType {
     Operator = 0, // 领地操作员（管理）

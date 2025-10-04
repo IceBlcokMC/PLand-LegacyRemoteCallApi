@@ -4,7 +4,7 @@ import {
     LandID,
     LandPermType,
     Result,
-    UUIDs,
+    UUID,
 } from "../ImportDef.js";
 import { LandAABB } from "./LandAABB.js";
 import { Land } from "./Land.js";
@@ -144,7 +144,7 @@ export class LandRegistry {
     static createAndAddOrdinaryLand(
         aabb: LandAABB,
         is3D: boolean,
-        owner: UUIDs
+        owner: UUID
     ): Result<Land, StorageLayerErrorCode> {
         if (aabb.min.dimid != aabb.max.dimid) {
             throw new Error("AABB min and max must be in the same dimension");
@@ -321,13 +321,13 @@ export class LandRegistry {
      * @param uuid 玩家 uuid
      * @param includeShared 是否包含其它玩家共享的领地(默认false)
      */
-    static getLands(uuid: UUIDs, includeShared: boolean): Land[];
+    static getLands(uuid: UUID, includeShared: boolean): Land[];
     /**
      * 获取玩家在指定维度所有的领地
      * @param uuid 玩家 uuid
      * @param dimid 维度 id
      */
-    static getLands(uuid: UUIDs, dimid: number): Land[];
+    static getLands(uuid: UUID, dimid: number): Land[];
 
     static getLands(...args: any[]): Land[] {
         switch (args.length) {
@@ -354,14 +354,14 @@ export class LandRegistry {
                 const arg0 = args[0];
                 if (typeof arg0 === "string") {
                     if (typeof args[1] === "boolean" || args[1] === undefined) {
-                        // getLands(UUIDs const& uuid, bool includeShared = false) const;
+                        // getLands(UUID const& uuid, bool includeShared = false) const;
                         const includeShared = args[1] ?? false;
                         return LandRegistry.IMPORTS.LandRegistry_getLands2(
                             arg0,
                             includeShared
                         ).map((id: LandID) => new Land(id));
                     } else {
-                        // getLands(UUIDs const& uuid, LandDimid dimid) const;
+                        // getLands(UUID const& uuid, LandDimid dimid) const;
                         return LandRegistry.IMPORTS.LandRegistry_getLands3(
                             arg0,
                             args[1]
@@ -427,7 +427,7 @@ export class LandRegistry {
     }
 
     static getPermType(
-        uuid: UUIDs,
+        uuid: UUID,
         landID = 0,
         includeOperator = true
     ): LandPermType {

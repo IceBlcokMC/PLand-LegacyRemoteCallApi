@@ -137,7 +137,7 @@ void Export_LDEvents() {
                 REGISTER_LISTENER(
                     land::LandMemberChangeBeforeEvent,
                     (Player*, std::string, int, bool),
-                    (&ev.getPlayer(), ev.getTargetPlayer(), ev.getLandID(), ev.isAdd()),
+                    (&ev.getPlayer(), ev.getTargetPlayer().asString(), ev.getLandID(), ev.isAdd()),
                     ev.cancel()
                 )
             }
@@ -145,7 +145,7 @@ void Export_LDEvents() {
                 REGISTER_LISTENER(
                     land::LandMemberChangeAfterEvent,
                     (Player*, std::string, int, bool),
-                    (&ev.getPlayer(), ev.getTargetPlayer(), ev.getLandID(), ev.isAdd()),
+                    (&ev.getPlayer(), ev.getTargetPlayer().asString(), ev.getLandID(), ev.isAdd()),
                 )
             }
 
@@ -153,7 +153,7 @@ void Export_LDEvents() {
                 REGISTER_LISTENER(
                     land::LandOwnerChangeBeforeEvent,
                     (Player*, std::string, int),
-                    (&ev.getPlayer(), ev.getNewOwner(), ev.getLandID()),
+                    (&ev.getPlayer(), ev.getNewOwner().asString(), ev.getLandID()),
                     ev.cancel()
                 )
             }
@@ -161,7 +161,7 @@ void Export_LDEvents() {
                 REGISTER_LISTENER(
                     land::LandOwnerChangeAfterEvent,
                     (Player*, std::string, int),
-                    (&ev.getPlayer(), ev.getNewOwner(), ev.getLandID()),
+                    (&ev.getPlayer(), ev.getNewOwner().asString(), ev.getLandID()),
                 )
             }
 

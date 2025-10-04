@@ -1,4 +1,5 @@
 #include "pland/land/Land.h"
+#include "mc/platform/UUID.h"
 #include "pland/PLand.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/aabb/LandPos.h"
@@ -10,6 +11,9 @@
 #include "exports/APIHelper.h"
 
 #include "ExportDef.h"
+#include <algorithm>
+#include <string>
+#include <vector>
 
 namespace ldapi {
 
@@ -87,7 +91,7 @@ void Export_Class_Land() {
         if (!land) {
             return "";
         }
-        return land->getOwner();
+        return land->getOwner().asString();
     });
 
     exportAs("Land_setOwner", [registry](int _landId, std::string const& owner) -> void {
@@ -95,7 +99,10 @@ void Export_Class_Land() {
         if (!land) {
             return;
         }
-        land->setOwner(owner);
+        if (!mce::UUID::canParse(owner)) {
+            return;
+        }
+        land->setOwner(mce::UUID{owner});
     });
 
     exportAs("Land_getMembers", [registry](int _landId) -> std::vector<std::string> {
@@ -103,7 +110,17 @@ void Export_Class_Land() {
         if (!land) {
             return {};
         }
-        return land->getMembers();
+        std::vector<std::string> members;
+
+        auto& landMembers = land->getMembers();
+        members.reserve(landMembers.size());
+        std::transform(
+            landMembers.begin(),
+            landMembers.end(),
+            std::back_inserter(members),
+            [](mce::UUID const& member) -> std::string { return member.asString(); }
+        );
+        return members;
     });
 
     exportAs("Land_addLandMember", [registry](int _landId, std::string const& member) -> void {
@@ -111,7 +128,10 @@ void Export_Class_Land() {
         if (!land) {
             return;
         }
-        land->addLandMember(member);
+        if (!mce::UUID::canParse(member)) {
+            return;
+        }
+        land->addLandMember(mce::UUID{member});
     });
 
     exportAs("Land_removeLandMember", [registry](int _landId, std::string const& member) -> void {
@@ -119,7 +139,7 @@ void Export_Class_Land() {
         if (!land) {
             return;
         }
-        land->removeLandMember(member);
+        land->removeLandMember(mce::UUID{member});
     });
 
     exportAs("Land_getName", [registry](int _landId) -> std::string {
@@ -183,7 +203,10 @@ void Export_Class_Land() {
         if (!land) {
             return false;
         }
-        return land->isOwner(uuid);
+        if (!mce::UUID::canParse(uuid)) {
+            return false;
+        }
+        return land->isOwner(mce::UUID{uuid});
     });
 
     exportAs("Land_isMember", [registry](int _landId, std::string const& uuid) -> bool {
@@ -191,7 +214,10 @@ void Export_Class_Land() {
         if (!land) {
             return false;
         }
-        return land->isMember(uuid);
+        if (!mce::UUID::canParse(uuid)) {
+            return false;
+        }
+        return land->isMember(mce::UUID{uuid});
     });
 
     exportAs("Land_isConvertedLand", [registry](int _landId) -> bool {
@@ -397,7 +423,10 @@ void Export_Class_Land() {
         if (!land) {
             return -1;
         }
-        return static_cast<int>(land->getPermType(uuid));
+        if (!mce::UUID::canParse(uuid)) {
+            return -1;
+        }
+        return static_cast<int>(land->getPermType(mce::UUID(uuid)));
     });
 }
 
