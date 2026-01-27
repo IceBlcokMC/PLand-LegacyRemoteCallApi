@@ -18,9 +18,10 @@ PLand-LegacyRemoteCallApi 从 0.8.0 开始提供 ESM 和 CJS 两种导出方式�
 - JavaScript - ESM
 
 ```js
-// 导入 PLand 类型定义
-/// <reference path="../PLand-LegacyRemoteCallApi/lib/esm/PLand.d.ts" />
-/// <reference path="../PLand-LegacyRemoteCallApi/lib/esm/Global.d.ts" />
+// 导入 PLand 类型定义(仅参考，路径填写实际路径)
+/// <reference path="path/to/PLand-LegacyRemoteCallApi/lib/esm/imports/LandRegistry.d.ts" />
+/// <reference path="path/to/PLand-LegacyRemoteCallApi/lib/esm/imports/Land.d.ts" />
+// ... 其他类型定义
 
 // 这里导入 LegacyScriptEngine_API 补全库，路径填写你的 LegacyScriptEngine_API 补全库所在路径
 /// <reference path="path/to/LegacyScriptEngine_API/platforms/javascript/src/index.d.ts" />
@@ -30,7 +31,7 @@ PLand-LegacyRemoteCallApi 从 0.8.0 开始提供 ESM 和 CJS 两种导出方式�
 import {
   LDEvent,
   PLand,
-} from "./plugins/PLand-LegacyRemoteCallApi/lib/esm/PLand.js";
+} from "./plugins/PLand-LegacyRemoteCallApi/lib/esm/imports/LandRegistry.js";
 
 // 获取所有领地
 PLand.getLands().map((land) => {
@@ -42,7 +43,7 @@ PLand.getLands().map((land) => {
 // 注意：部分事件不可拦截，具体查看 PLand 文档
 LDEvent.listen("PlayerEnterLandEvent", (pl, landID) => {
   logger.info(
-    `玩家 '${pl.realName}' 进入领地: ${PLand.getLand(landID).mLandName}`
+    `玩家 '${pl.realName}' 进入领地: ${PLand.getLand(landID).mLandName}`,
   );
 });
 ```
@@ -50,15 +51,16 @@ LDEvent.listen("PlayerEnterLandEvent", (pl, landID) => {
 - JavaScript - CJS
 
 ```js
-// 导入 PLand 类型定义
-/// <reference path="../PLand-LegacyRemoteCallApi/lib/cjs/PLand.d.ts" />
-/// <reference path="../PLand-LegacyRemoteCallApi/lib/cjs/Global.d.ts" />
+// 导入 PLand 类型定义(仅参考，路径填写实际路径)
+/// <reference path="path/to/PLand-LegacyRemoteCallApi/lib/esm/imports/LandRegistry.d.ts" />
+/// <reference path="path/to/PLand-LegacyRemoteCallApi/lib/esm/imports/Land.d.ts" />
+// ... 其他类型定义
 
 // 这里导入 LegacyScriptEngine_API 补全库，路径填写你的 LegacyScriptEngine_API 补全库所在路径
 /// <reference path="path/to/LegacyScriptEngine_API/platforms/javascript/src/index.d.ts" />
 
 // 这里使用的是 CJS 模块系统，因此需要使用 require 导入
-const { LDEvent, PLand } = require("PLand-LegacyRemoteCallApi/lib/cjs/PLand");
+const { LDEvent, PLand } = require("PLand-LegacyRemoteCallApi/lib/cjs/imports/LandRegistry");
 
 // 获取所有领地
 PLand.getLands().map((land) => {
@@ -70,7 +72,7 @@ PLand.getLands().map((land) => {
 // 注意：部分事件不可拦截，具体查看 PLand 文档
 LDEvent.listen("PlayerEnterLandEvent", (pl, landID) => {
   logger.info(
-    `玩家 '${pl.realName}' 进入领地: ${PLand.getLand(landID).mLandName}`
+    `玩家 '${pl.realName}' 进入领地: ${PLand.getLand(landID).mLandName}`,
   );
 });
 ```
@@ -102,28 +104,28 @@ TypeScript 和 JavaScript 基本一致，只需要配置好 tsconfig.json 即可
 
 ```file
 ./
-├── LegacyScriptEngine_API/
 ├── src/
 │   └── index.ts
+├── package.json
 └── tsconfig.json
+```
+
+```bash
+npm install -D @levimc-lse/types
 ```
 
 tsconfig.json 配置如下：
 
 ```json
 {
-  "include": [
-    "src/**.ts",
-    "path/to/PLand-LegacyRemoteCallApi/lib/esm/**.d.ts",
-    "LegacyScriptEngine_API/platforms/javascript/src/**.d.ts"
-  ],
+  "include": ["src/**.ts", "path/to/PLand-LegacyRemoteCallApi/lib/esm/**.d.ts"],
   "compilerOptions": {
     "outDir": "./dist", // 编译输出目录
     "target": "ES2022", // 编译目标 ES2022
     "module": "ES6", // ES6 模块化 或者 CommonJS
     "skipLibCheck": true, // 跳过声明文件的类型检查
     "lib": ["ES2022"], // 只包含 ES2022 库，不包含 DOM
-    "types": [] // 不包含任何默认的类型定义
+    "types": ["@levimc-lse/types"]
   }
 }
 ```
