@@ -4,8 +4,6 @@
 
 #include "ll/api/mod/RegisterHelper.h"
 
-#include "pland/Version.h"
-
 namespace ldapi {
 
 extern void Export_Class_LandRegistry();
@@ -24,26 +22,6 @@ MyMod& MyMod::getInstance() {
     return instance;
 }
 bool MyMod::load() {
-    auto& logger = getSelf().getLogger();
-
-    if (SUPPORTED_PLAND_VERSION_MAJOR != PLAND_VERSION_MAJOR || SUPPORTED_PLAND_VERSION_MINOR != PLAND_VERSION_MINOR) {
-        logger.warn(
-            "PLand 版本不匹配，当前支持版本: v{}.{}.x，实际版本: v{}.{}.x，请确保 PLand-LRCA 与 PLand "
-            "版本一致，否则某些功能可能无法正常使用。",
-            SUPPORTED_PLAND_VERSION_MAJOR,
-            SUPPORTED_PLAND_VERSION_MINOR,
-            PLAND_VERSION_MAJOR,
-            PLAND_VERSION_MINOR
-        );
-        logger.warn(
-            "Unsupported PLand version, current supported version: v{}.{}.x, actual version: v{}.{}.x, please "
-            "ensure that PLand-LRCA and PLand versions are consistent, otherwise some functions may not work properly.",
-            SUPPORTED_PLAND_VERSION_MAJOR,
-            SUPPORTED_PLAND_VERSION_MINOR,
-            PLAND_VERSION_MAJOR,
-            PLAND_VERSION_MINOR
-        );
-    }
 
     ldapi::Export_Class_LandRegistry();
     ldapi::Export_Class_LandAABB();

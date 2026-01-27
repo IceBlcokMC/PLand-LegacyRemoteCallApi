@@ -4,9 +4,18 @@ export class LandAABB {
     // 导入表，请勿修改
     static IMPORTS = {
         LandAABB_fix: ll.imports(ImportNamespace, "LandAABB_fix"),
-        LandAABB_getDepth: ll.imports(ImportNamespace, "LandAABB_getDepth"),
-        LandAABB_getHeight: ll.imports(ImportNamespace, "LandAABB_getHeight"),
-        LandAABB_getWidth: ll.imports(ImportNamespace, "LandAABB_getWidth"),
+        LandAABB_getSpanX: ll.imports(ImportNamespace, "LandAABB_getSpanX") as (
+            a1: IntPos,
+            a2: IntPos,
+        ) => number,
+        LandAABB_getSpanY: ll.imports(ImportNamespace, "LandAABB_getSpanY") as (
+            a1: IntPos,
+            a2: IntPos,
+        ) => number,
+        LandAABB_getSpanZ: ll.imports(ImportNamespace, "LandAABB_getSpanZ") as (
+            a1: IntPos,
+            a2: IntPos,
+        ) => number,
         LandAABB_getSquare: ll.imports(ImportNamespace, "LandAABB_getSquare"),
         LandAABB_getVolume: ll.imports(ImportNamespace, "LandAABB_getVolume"),
         LandAABB_toString: ll.imports(ImportNamespace, "LandAABB_toString"),
@@ -15,11 +24,11 @@ export class LandAABB {
         LandAABB_hasPos: ll.imports(ImportNamespace, "LandAABB_hasPos"),
         LandAABB_isCollision: ll.imports(
             ImportNamespace,
-            "LandAABB_isCollision"
+            "LandAABB_isCollision",
         ),
         LandAABB_isComplisWithMinSpacing: ll.imports(
             ImportNamespace,
-            "LandAABB_isComplisWithMinSpacing"
+            "LandAABB_isComplisWithMinSpacing",
         ),
         LandAABB_isContain: ll.imports(ImportNamespace, "LandAABB_isContain"),
     };
@@ -38,15 +47,29 @@ export class LandAABB {
         this.max = res[1];
     }
 
-    getDepth(): number {
-        return LandAABB.IMPORTS.LandAABB_getDepth(this.min, this.max);
+    // X 轴坐标跨度 (depth)
+    getSpanX(): number {
+        return LandAABB.IMPORTS.LandAABB_getSpanX(this.min, this.max);
     }
-    getHeight(): number {
-        return LandAABB.IMPORTS.LandAABB_getHeight(this.min, this.max);
+    // Y 轴坐标跨度 (height)
+    getSpanY(): number {
+        return LandAABB.IMPORTS.LandAABB_getSpanY(this.min, this.max);
     }
-    getWidth(): number {
-        return LandAABB.IMPORTS.LandAABB_getWidth(this.min, this.max);
+    // Z 轴坐标跨度 (width)
+    getSpanZ(): number {
+        return LandAABB.IMPORTS.LandAABB_getSpanZ(this.min, this.max);
     }
+
+    /** @deprecated removed in v0.17.0 */ getDepth(): number {
+        return this.getSpanX();
+    }
+    /** @deprecated removed in v0.17.0 */ getHeight(): number {
+        return this.getSpanY();
+    }
+    /** @deprecated removed in v0.17.0 */ getWidth(): number {
+        return this.getSpanZ();
+    }
+
     getSquare(): number {
         return LandAABB.IMPORTS.LandAABB_getSquare(this.min, this.max);
     }
@@ -79,7 +102,7 @@ export class LandAABB {
             this.min,
             this.max,
             pos,
-            includeY
+            includeY,
         );
     }
 
@@ -94,7 +117,7 @@ export class LandAABB {
             pos1.min,
             pos1.max,
             pos2.min,
-            pos2.max
+            pos2.max,
         );
     }
 
@@ -110,7 +133,7 @@ export class LandAABB {
         pos1: LandAABB,
         pos2: LandAABB,
         minSpacing: number,
-        includeY = true
+        includeY = true,
     ): boolean {
         return LandAABB.IMPORTS.LandAABB_isComplisWithMinSpacing(
             pos1.min,
@@ -118,7 +141,7 @@ export class LandAABB {
             pos2.min,
             pos2.max,
             minSpacing,
-            includeY
+            includeY,
         );
     }
 
@@ -131,7 +154,7 @@ export class LandAABB {
             pos1.min,
             pos1.max,
             pos2.min,
-            pos2.max
+            pos2.max,
         );
     }
 }

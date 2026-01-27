@@ -19,19 +19,19 @@ void Export_Class_LandAABB() {
         return res;
     });
 
-    exportAs("LandAABB_getDepth", [](IntPos const& a, IntPos const& b) -> int {
+    exportAs("LandAABB_getSpanX", [](IntPos const& a, IntPos const& b) -> int {
         auto p = Make(a, b);
-        return p.getDepth();
+        return p.getSpanX();
     });
 
-    exportAs("LandAABB_getHeight", [](IntPos const& a, IntPos const& b) -> int {
+    exportAs("LandAABB_getSpanY", [](IntPos const& a, IntPos const& b) -> int {
         auto p = Make(a, b);
-        return p.getHeight();
+        return p.getSpanY();
     });
 
-    exportAs("LandAABB_getWidth", [](IntPos const& a, IntPos const& b) -> int {
+    exportAs("LandAABB_getSpanZ", [](IntPos const& a, IntPos const& b) -> int {
         auto p = Make(a, b);
-        return p.getWidth();
+        return p.getSpanZ();
     });
 
     exportAs("LandAABB_getSquare", [](IntPos const& a, IntPos const& b) -> int {

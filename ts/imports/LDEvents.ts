@@ -1,51 +1,37 @@
 import { ImportNamespace, LandID, UUID } from "../ImportDef.js";
 
-export type EventType =
-    | "PlayerEnterLandEvent"
-    | "PlayerLeaveLandEvent"
-    | "PlayerAskCreateLandBeforeEvent"
-    | "PlayerAskCreateLandAfterEvent"
-    | "PlayerBuyLandBeforeEvent"
-    | "PlayerBuyLandAfterEvent"
-    | "PlayerDeleteLandBeforeEvent"
-    | "PlayerDeleteLandAfterEvent"
-    | "LandMemberChangeBeforeEvent"
-    | "LandMemberChangeAfterEvent"
-    | "LandOwnerChangeBeforeEvent"
-    | "LandOwnerChangeAfterEvent"
-    | "LandRangeChangeBeforeEvent"
-    | "LandRangeChangeAfterEvent";
-
 type EventParams = {
     PlayerEnterLandEvent: [player: Player, landID: LandID];
     PlayerLeaveLandEvent: [player: Player, landID: LandID];
-    PlayerAskCreateLandBeforeEvent: [player: Player];
-    PlayerAskCreateLandAfterEvent: [player: Player, is3DLand: boolean];
+
+    /** @version v0.17.0 Added */
+    PlayerRequestCreateLandEvent: [player: Player, type: "Ordinary" | "Sub"];
+
     PlayerBuyLandBeforeEvent: [
         player: Player,
         price: number,
         posA: IntPos,
         posB: IntPos,
-        is3DLand: boolean
+        is3DLand: boolean,
     ];
     PlayerBuyLandAfterEvent: [player: Player, landID: LandID];
     PlayerDeleteLandBeforeEvent: [
         player: Player,
         landID: LandID,
-        refundPrice: number
+        refundPrice: number,
     ];
     PlayerDeleteLandAfterEvent: [player: Player, landID: LandID];
     LandMemberChangeBeforeEvent: [
         player: Player,
         targetPlayer: UUID, // 目标玩家 (被添加/移除的玩家)
         landID: LandID,
-        isAdd: boolean
+        isAdd: boolean,
     ];
     LandMemberChangeAfterEvent: [
         player: Player,
         targetPlayer: UUID, // 目标玩家 (被添加/移除的玩家)
         landID: LandID,
-        isAdd: boolean
+        isAdd: boolean,
     ];
     LandOwnerChangeBeforeEvent: [playe: Player, newOwner: UUID, landID: LandID];
     LandOwnerChangeAfterEvent: [playe: Player, newOwner: UUID, landID: LandID];
@@ -55,7 +41,7 @@ type EventParams = {
         newPosA: IntPos, // 新的范围A点
         newPosB: IntPos, // 新范围B点
         needPay: number, // 需要支付的金额
-        refundPrice: number // 退款的金额
+        refundPrice: number, // 退款的金额
     ];
     LandRangeChangeAfterEvent: [
         player: Player,
@@ -63,19 +49,21 @@ type EventParams = {
         newPosA: IntPos, // 新的范围A点
         newPosB: IntPos, // 新范围B点
         needPay: number, // 需要支付的金额
-        refundPrice: number // 退款的金额
+        refundPrice: number, // 退款的金额
     ];
 };
+
+export type EventType = keyof EventParams;
 
 export class LDEvent {
     static IMPORTS = {
         ScriptEventManager_genListenerID: ll.imports(
             ImportNamespace,
-            "ScriptEventManager_genListenerID"
+            "ScriptEventManager_genListenerID",
         ),
         Event_RegisterListener: ll.imports(
             ImportNamespace,
-            "Event_RegisterListener"
+            "Event_RegisterListener",
         ),
     };
 
@@ -93,7 +81,7 @@ export class LDEvent {
      */
     static listen<T extends EventType>(
         event: T,
-        callback: (...args: EventParams[T]) => boolean
+        callback: (...args: EventParams[T]) => boolean,
     ): boolean {
         const id = LDEvent.IMPORTS.ScriptEventManager_genListenerID();
         ll.exports(callback, event, id);

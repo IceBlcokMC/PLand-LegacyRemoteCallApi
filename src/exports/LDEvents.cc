@@ -1,16 +1,24 @@
-#include "fmt/core.h"
 #include "ll/api/event/EventBus.h"
 #include "ll/api/event/ListenerBase.h"
 #include "ll/api/utils/HashUtils.h"
+
+#include "magic_enum.hpp"
 #include "mc/world/actor/player/Player.h"
 #include "mc/world/level/BlockPos.h"
+
+#include "fmt/core.h"
+
 #include "mod/MyMod.h"
+
 #include "pland/Global.h"
 #include "pland/PLand.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/land/Land.h"
 #include "pland/land/LandEvent.h"
-#include "pland/utils/JSON.h"
+#include "pland/utils/JsonUtil.h"
+
+#include "pland/events/PlayerRequestCreateLandEvent.h"
+
 #include <memory>
 #include <unordered_map>
 #include <utility>
@@ -82,15 +90,11 @@ void Export_LDEvents() {
             }
 
             switch (doHash(eventName)) {
-
-            case doHash("PlayerAskCreateLandBeforeEvent"): {
-                REGISTER_LISTENER(land::PlayerAskCreateLandBeforeEvent, (Player*), (&ev.getPlayer()), ev.cancel());
-            }
-            case doHash("PlayerAskCreateLandAfterEvent"): {
+            case doHash("PlayerRequestCreateLandEvent"): {
                 REGISTER_LISTENER(
-                    land::PlayerAskCreateLandAfterEvent,
-                    (Player*, bool),
-                    (&ev.getPlayer(), ev.is3DLand()),
+                    land::event::PlayerRequestCreateLandEvent,
+                    (Player*, std::string),
+                    (&ev.self(), magic_enum::enum_name(ev.type()).data()),
                 )
             }
 

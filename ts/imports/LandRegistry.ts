@@ -18,17 +18,6 @@ export type PlayerSettings = {
     /** 玩家语言 */ localeCode: string | "system" | "server";
 };
 
-interface VersionMeta {
-    major: number;
-    minor: number;
-    patch: number;
-    build: number;
-    commit: string;
-    snapshot: boolean;
-    release: boolean;
-    version: string;
-}
-
 enum StorageLayerErrorCode {
     Unknown = 0, // 未知错误
     STLMapError = 1, // STL Map 操作失败
@@ -50,13 +39,13 @@ export class LandRegistry {
         LandRegistry_addOperator: importAs("LandRegistry_addOperator"),
         LandRegistry_removeOperator: importAs("LandRegistry_removeOperator"),
         LandRegistry_hasPlayerSettings: importAs(
-            "LandRegistry_hasPlayerSettings"
+            "LandRegistry_hasPlayerSettings",
         ),
         LandRegistry_getPlayerSettings: importAs(
-            "LandRegistry_getPlayerSettings"
+            "LandRegistry_getPlayerSettings",
         ),
         LandRegistry_setPlayerSettings: importAs(
-            "LandRegistry_setPlayerSettings"
+            "LandRegistry_setPlayerSettings",
         ),
         LandRegistry_getLand: importAs("LandRegistry_getLand"),
         LandRegistry_removeLand: importAs("LandRegistry_removeLand"),
@@ -71,21 +60,21 @@ export class LandRegistry {
         LandRegistry_getLandAt1: importAs("LandRegistry_getLandAt1"),
         LandRegistry_getLandAt2: importAs("LandRegistry_getLandAt2"),
         LandRegistry_refreshLandRange: importAs(
-            "LandRegistry_refreshLandRange"
+            "LandRegistry_refreshLandRange",
         ),
         PLand_getVersionMeta: importAs("PLand_getVersionMeta"),
         LandRegistry_removeOrdinaryLand: importAs(
-            "LandRegistry_removeOrdinaryLand"
+            "LandRegistry_removeOrdinaryLand",
         ),
         LandRegistry_removeSubLand: importAs("LandRegistry_removeSubLand"),
         LandRegistry_removeLandAndSubLands: importAs(
-            "LandRegistry_removeLandAndSubLands"
+            "LandRegistry_removeLandAndSubLands",
         ),
         LandRegistry_removeLandAndPromoteSubLands: importAs(
-            "LandRegistry_removeLandAndPromoteSubLands"
+            "LandRegistry_removeLandAndPromoteSubLands",
         ),
         LandRegistry_removeLandAndTransferSubLands: importAs(
-            "LandRegistry_removeLandAndTransferSubLands"
+            "LandRegistry_removeLandAndTransferSubLands",
         ),
         LandRegistry_addOrdinaryLand: importAs("LandRegistry_addOrdinaryLand"),
         LandRegistry_addSubLand: importAs("LandRegistry_addSubLand"),
@@ -126,7 +115,7 @@ export class LandRegistry {
         const jsonStr = JSON.stringify(settings);
         return LandRegistry.IMPORTS.LandRegistry_setPlayerSettings(
             uuid,
-            jsonStr
+            jsonStr,
         );
     }
 
@@ -144,7 +133,7 @@ export class LandRegistry {
     static createAndAddOrdinaryLand(
         aabb: LandAABB,
         is3D: boolean,
-        owner: UUID
+        owner: UUID,
     ): Result<Land, StorageLayerErrorCode> {
         if (aabb.min.dimid != aabb.max.dimid) {
             throw new Error("AABB min and max must be in the same dimension");
@@ -152,18 +141,18 @@ export class LandRegistry {
         const result = LandRegistry.IMPORTS.LandRegistry_addOrdinaryLand(
             [aabb.min, aabb.max],
             is3D,
-            owner
+            owner,
         );
 
         if (result[0] === "success") {
             return new Result<Land, StorageLayerErrorCode>(
                 new Land(parseInt(result[1])),
-                null
+                null,
             );
         } else {
             return new Result<Land, StorageLayerErrorCode>(
                 null,
-                parseInt(result[1])
+                parseInt(result[1]),
             );
         }
     }
@@ -175,22 +164,22 @@ export class LandRegistry {
      */
     static createAndAddSubLand(
         parent: Land,
-        subLandRange: LandAABB
+        subLandRange: LandAABB,
     ): Result<Land, StorageLayerErrorCode> {
         const result = LandRegistry.IMPORTS.LandRegistry_addSubLand(
             parent.mLandId,
-            [subLandRange.min, subLandRange.max]
+            [subLandRange.min, subLandRange.max],
         );
 
         if (result[0] === "success") {
             return new Result<Land, StorageLayerErrorCode>(
                 new Land(parseInt(result[1])),
-                null
+                null,
             );
         } else {
             return new Result<Land, StorageLayerErrorCode>(
                 null,
-                parseInt(result[1])
+                parseInt(result[1]),
             );
         }
     }
@@ -206,7 +195,7 @@ export class LandRegistry {
      * @brief 移除普通领地
      */
     static removeOrdinaryLand(
-        land: Land | LandID
+        land: Land | LandID,
     ): Result<void, StorageLayerErrorCode> {
         const id =
             typeof land === "number"
@@ -216,7 +205,7 @@ export class LandRegistry {
         const res = LandRegistry.IMPORTS.LandRegistry_removeOrdinaryLand(id);
         return new Result<void, StorageLayerErrorCode>(
             res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode)
+            res === -1 ? null : (res as StorageLayerErrorCode),
         );
     }
 
@@ -224,7 +213,7 @@ export class LandRegistry {
      * @brief 移除子领地
      */
     static removeSubLand(
-        land: Land | LandID
+        land: Land | LandID,
     ): Result<void, StorageLayerErrorCode> {
         const id =
             typeof land === "number"
@@ -234,7 +223,7 @@ export class LandRegistry {
         const res = LandRegistry.IMPORTS.LandRegistry_removeSubLand(id);
         return new Result<void, StorageLayerErrorCode>(
             res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode)
+            res === -1 ? null : (res as StorageLayerErrorCode),
         );
     }
 
@@ -242,7 +231,7 @@ export class LandRegistry {
      * @brief 移除领地和其子领地
      */
     static removeLandAndSubLands(
-        land: Land | LandID
+        land: Land | LandID,
     ): Result<void, StorageLayerErrorCode> {
         const id =
             typeof land === "number"
@@ -252,7 +241,7 @@ export class LandRegistry {
         const res = LandRegistry.IMPORTS.LandRegistry_removeLandAndSubLands(id);
         return new Result<void, StorageLayerErrorCode>(
             res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode)
+            res === -1 ? null : (res as StorageLayerErrorCode),
         );
     }
 
@@ -260,7 +249,7 @@ export class LandRegistry {
      * @brief 移除当前领地并提升子领地为普通领地
      */
     static removeLandAndPromoteSubLands(
-        land: Land | LandID
+        land: Land | LandID,
     ): Result<void, StorageLayerErrorCode> {
         const id =
             typeof land === "number"
@@ -271,7 +260,7 @@ export class LandRegistry {
             LandRegistry.IMPORTS.LandRegistry_removeLandAndPromoteSubLands(id);
         return new Result<void, StorageLayerErrorCode>(
             res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode)
+            res === -1 ? null : (res as StorageLayerErrorCode),
         );
     }
 
@@ -279,7 +268,7 @@ export class LandRegistry {
      * @brief 移除当前领地并移交子领地给当前领地的父领地
      */
     static removeLandAndTransferSubLands(
-        land: Land | LandID
+        land: Land | LandID,
     ): Result<void, StorageLayerErrorCode> {
         const id =
             typeof land === "number"
@@ -290,7 +279,7 @@ export class LandRegistry {
             LandRegistry.IMPORTS.LandRegistry_removeLandAndTransferSubLands(id);
         return new Result<void, StorageLayerErrorCode>(
             res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode)
+            res === -1 ? null : (res as StorageLayerErrorCode),
         );
     }
 
@@ -334,19 +323,19 @@ export class LandRegistry {
             case 0: {
                 // getLands() const;
                 return LandRegistry.IMPORTS.LandRegistry_getLands().map(
-                    (id: LandID) => new Land(id)
+                    (id: LandID) => new Land(id),
                 );
             }
             case 1: {
                 if (Array.isArray(args[0])) {
                     // getLands(std::vector<LandID> const& ids) const;
                     return LandRegistry.IMPORTS.LandRegistry_getLands4(
-                        args[0]
+                        args[0],
                     ).map((id: LandID) => new Land(id));
                 } else if (typeof args[0] === "number") {
                     // getLands(LandDimid dimid) const;
                     return LandRegistry.IMPORTS.LandRegistry_getLands1(
-                        args[0]
+                        args[0],
                     ).map((id: LandID) => new Land(id));
                 }
             }
@@ -358,13 +347,13 @@ export class LandRegistry {
                         const includeShared = args[1] ?? false;
                         return LandRegistry.IMPORTS.LandRegistry_getLands2(
                             arg0,
-                            includeShared
+                            includeShared,
                         ).map((id: LandID) => new Land(id));
                     } else {
                         // getLands(UUID const& uuid, LandDimid dimid) const;
                         return LandRegistry.IMPORTS.LandRegistry_getLands3(
                             arg0,
-                            args[1]
+                            args[1],
                         ).map((id: LandID) => new Land(id));
                     }
                 }
@@ -393,7 +382,7 @@ export class LandRegistry {
 
     static getLandAt(
         pos1: IntPos,
-        radius_or_pos2?: number | IntPos
+        radius_or_pos2?: number | IntPos,
     ): Land | null | Land[] {
         if (!isIntPos(pos1)) {
             throw new Error("Invalid arguments");
@@ -410,7 +399,7 @@ export class LandRegistry {
             // getLandAt(BlockPos const& center, int radius, LandDimid dimid) const;
             return LandRegistry.IMPORTS.LandRegistry_getLandAt1(
                 pos1,
-                radius_or_pos2
+                radius_or_pos2,
             ).map((id: LandID) => new Land(id));
         } else if (isIntPos(radius_or_pos2)) {
             // getLandAt(BlockPos const& pos1, BlockPos const& pos2, LandDimid dimid) const;
@@ -419,7 +408,7 @@ export class LandRegistry {
             }
             return LandRegistry.IMPORTS.LandRegistry_getLandAt2(
                 pos1,
-                radius_or_pos2
+                radius_or_pos2,
             ).map((id: LandID) => new Land(id));
         } else {
             throw new Error("Invalid arguments");
@@ -429,12 +418,12 @@ export class LandRegistry {
     static getPermType(
         uuid: UUID,
         landID = 0,
-        includeOperator = true
+        includeOperator = true,
     ): LandPermType {
         return LandRegistry.IMPORTS.LandRegistry_getPermType(
             uuid,
             landID,
-            includeOperator
+            includeOperator,
         );
     }
 
@@ -443,7 +432,11 @@ export class LandRegistry {
         LandRegistry.IMPORTS.LandRegistry_refreshLandRange(land.unique_id);
     }
 
-    static getVersionMeta(): VersionMeta {
+    static getVersionMeta(): {
+        Commit: string;
+        Branch: string;
+        Tag: string;
+    } {
         return JSON.parse(LandRegistry.IMPORTS.PLand_getVersionMeta());
     }
 }

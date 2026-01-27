@@ -9,6 +9,7 @@
         "clean": "rimraf bin/PLand-LegacyRemoteCallApi/lib"
     },
     "devDependencies": {
+        "@levimc-lse/types": "^2.17.0",
         "rimraf": "^5.0.5",
         "typescript": "^5.3.3"
     },

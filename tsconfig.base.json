@@ -1,7 +1,6 @@
 {
     "include": [
-        "./ts/**/*.ts",
-        "./LegacyScriptEngine_API/platforms/javascript/src/**/*.d.ts"
+        "./ts/**/*.ts"
     ],
     "compilerOptions": {
         "rootDir": "./ts",
@@ -12,7 +11,9 @@
         "lib": [
             "ES2022"
         ],
-        "types": [],
+        "types": [
+            "@levimc-lse/types"
+        ],
         "strict": true,
     }
 }

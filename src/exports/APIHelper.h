@@ -3,7 +3,7 @@
 #include "pland/aabb/LandAABB.h"
 #include "pland/aabb/LandPos.h"
 #include "pland/land/LandContext.h"
-#include "pland/utils/JSON.h"
+#include "pland/utils/JsonUtil.h"
 
 
 #include "ExportDef.h"
@@ -44,13 +44,13 @@ struct Converter<land::LandPos> {
 template <>
 struct Converter<land::LandPermTable> {
     static std::string toLSE(land::LandPermTable const& table) {
-        auto j = land::JSON::structTojson(table);
+        auto j = land::json_util::struct2json(table);
         return j.dump();
     }
     static land::LandPermTable toCpp(std::string const& json) {
         auto                j = nlohmann::json::parse(json);
         land::LandPermTable table{};
-        land::JSON::jsonToStructNoMerge(j, table);
+        land::json_util::json2structWithDiffPatch(j, table);
         return table;
     }
 };

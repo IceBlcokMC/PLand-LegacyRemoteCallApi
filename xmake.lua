@@ -1,18 +1,16 @@
 add_rules("mode.debug", "mode.release")
 
 add_repositories("liteldev-repo https://github.com/LiteLDev/xmake-repo.git")
-add_repositories("engsr6982-repo https://github.com/engsr6982/xmake-repo.git")
--- add_repositories("engsr6982-repo-t1 D:/Codes/xmake-repo")
+add_repositories("iceblcokmc https://github.com/IceBlcokMC/xmake-repo.git")
 
 -- add_requires("levilamina x.x.x") for a specific version
 -- add_requires("levilamina develop") to use develop version
 -- please note that you should add bdslibrary yourself if using dev version
-add_requires("levilamina 1.7.0", {configs = {target_type = "server"}})
+add_requires("levilamina 1.9.0", {configs = {target_type = "server"}})
 add_requires("levibuildscript")
-add_requires("legacyremotecall 0.9.0-rc.1")
+add_requires("legacyremotecall 0.10.0")
 
-local PLandVersion = "0.16.0"
-add_requires("pland "..PLandVersion)
+add_requires("pland 0.17.0")
 
 if not has_config("vs_runtime") then
     set_runtimes("MD")
@@ -32,7 +30,7 @@ target("PLand-LegacyRemoteCallApi") -- Change this to your mod name.
         "/w44738",
         "/w45204"
     )
-    add_defines("NOMINMAX", "UNICODE", "_HAS_CXX23=1")
+    add_defines("NOMINMAX", "UNICODE")
     add_files("src/**.cpp", "src/**.cc")
     add_includedirs("src")
     add_packages("levilamina", "pland", "legacyremotecall")
@@ -40,12 +38,4 @@ target("PLand-LegacyRemoteCallApi") -- Change this to your mod name.
     set_kind("shared")
     set_languages("c++20")
     set_symbols("debug")
-
-    on_load(function (target) 
-        import("core.base.semver")
-        local sem = semver.try_parse(PLandVersion)
-        target:add("defines", 'SUPPORTED_PLAND_VERSION="'..PLandVersion..'"')
-        target:add("defines", 'SUPPORTED_PLAND_VERSION_MAJOR='..sem:major())
-        target:add("defines", 'SUPPORTED_PLAND_VERSION_MINOR='..sem:minor())
-        target:add("defines", 'SUPPORTED_PLAND_VERSION_PATCH='..sem:patch())
-    end)
+    add_defines("LL_PLAT_S")
