@@ -7,92 +7,87 @@ import {
 } from "../ImportDef.js";
 import {LandAABB} from "./LandAABB.js";
 
+
+export interface EnvironmentPerms {
+    allowFireSpread: boolean;          // 火焰蔓延
+    allowMonsterSpawn: boolean;        // 怪物生成
+    allowAnimalSpawn: boolean;         // 动物生成
+    allowMobGrief: boolean;            // 实体破坏(破坏/拾取/放置方块) v25 allowActorDestroy=false, enderman=false
+    allowExplode: boolean;             // 爆炸
+    allowFarmDecay: boolean;           // 耕地退化
+    allowPistonPushOnBoundary: boolean;// 活塞推动边界方块
+    allowRedstoneUpdate: boolean;      // 红石更新
+    allowBlockFall: boolean;           // 方块掉落
+    allowWitherDestroy: boolean;       // 凋零破坏
+    allowMossGrowth: boolean;          // 苔藓生长(蔓延) v27
+    allowLiquidFlow: boolean;          // 流动液体
+    allowDragonEggTeleport: boolean;   // 龙蛋传送 v25 allowAttackDragonEgg=false
+    allowSculkBlockGrowth: boolean;    // 幽匿尖啸体生长
+    allowSculkSpread: boolean;         // 幽匿蔓延 v27
+    allowLightningBolt: boolean;       // 闪电
+}
+
+export interface RoleEntry {
+    member: boolean;
+    guest: boolean;
+}
+
+export interface RolePerms {
+    allowDestroy: RoleEntry;        // 允许破坏方块
+    allowPlace: RoleEntry;          // 允许放置方块
+    useBucket: RoleEntry;           // 允许使用桶(水/岩浆/...)
+    useAxe: RoleEntry;              // 允许使用斧头
+    useHoe: RoleEntry;              // 允许使用锄头
+    useShovel: RoleEntry;           // 允许使用铲子
+    placeBoat: RoleEntry;           // 允许放置船
+    placeMinecart: RoleEntry;       // 允许放置矿车
+    useButton: RoleEntry;           // 允许使用按钮
+    useDoor: RoleEntry;             // 允许使用门
+    useFenceGate: RoleEntry;        // 允许使用栅栏门
+    allowInteractEntity: RoleEntry; // 允许与实体交互
+    useTrapdoor: RoleEntry;         // 允许使用活板门
+    editSign: RoleEntry;            // 允许编辑告示牌
+    useLever: RoleEntry;            // 允许使用拉杆
+    useFurnaces: RoleEntry;         // 允许使用所有熔炉类方块（熔炉/高炉/烟熏炉）
+    allowPlayerPickupItem: RoleEntry;  // 允许玩家拾取物品
+    allowRideTrans: RoleEntry;         // 允许骑乘运输工具（矿车/船）
+    allowRideEntity: RoleEntry;        // 允许骑乘实体
+    usePressurePlate: RoleEntry;       // 触发压力板
+    allowFishingRodAndHook: RoleEntry; // 允许使用钓鱼竿和鱼钩
+    allowUseThrowable: RoleEntry;      // 允许使用投掷物(雪球/鸡蛋/三叉戟/...)
+    useArmorStand: RoleEntry;          // 允许使用盔甲架
+    allowDropItem: RoleEntry;          // 允许丢弃物品
+    useItemFrame: RoleEntry;           // 允许操作物品展示框
+    useFlintAndSteel: RoleEntry;       // 使用打火石
+    useBeacon: RoleEntry;              // 使用信标
+    useBed: RoleEntry;                 // 使用床
+    allowPvP: RoleEntry;                 // 允许PvP v25 allowPlayerDamage=false
+    allowHostileDamage: RoleEntry;        // 敌对生物受到伤害 v25 allowMonsterDamage=true
+    allowFriendlyDamage: RoleEntry;      // 友好生物受到伤害
+    allowSpecialEntityDamage: RoleEntry; // 特殊生物受到伤害
+    useContainer: RoleEntry;   // 允许使用容器(箱子/木桶/潜影盒/发射器/投掷器/漏斗/雕纹书架/试炼宝库/...)
+    useWorkstation: RoleEntry; // 工作站类(工作台/铁砧/附魔台/酿造台/锻造台/砂轮/织布机/切石机/制图台/合成器)
+    useBell: RoleEntry;        // 使用钟
+    useCampfire: RoleEntry;    // 使用营火
+    useComposter: RoleEntry;   // 使用堆肥桶
+    useDaylightDetector: RoleEntry;  // 使用阳光探测器
+    useJukebox: RoleEntry;           // 使用唱片机
+    useNoteBlock: RoleEntry;         // 使用音符盒
+    useCake: RoleEntry;              // 吃蛋糕
+    useComparator: RoleEntry;        // 使用红石比较器
+    useRepeater: RoleEntry;          // 使用红石中继器
+    useLectern: RoleEntry;           // 使用讲台
+    useCauldron: RoleEntry;          // 使用炼药锅
+    useRespawnAnchor: RoleEntry;     // 使用重生锚
+    useBoneMeal: RoleEntry;          // 使用骨粉
+    useBeeNest: RoleEntry;           // 使用蜂巢(蜂箱)
+    editFlowerPot: RoleEntry;        // 编辑花盆
+    allowUseRangedWeapon: RoleEntry; // 允许使用远程武器(弓/弩)
+}
+
 export interface LandPermTable {
-    /**火焰蔓延*/ allowFireSpread: boolean;
-    /**点击龙蛋*/ allowAttackDragonEgg: boolean;
-    /**耕地退化*/ allowFarmDecay: boolean;
-    /**活塞推动*/ allowPistonPushOnBoundary: boolean;
-    /**红石更新*/ allowRedstoneUpdate: boolean;
-    /**爆炸*/ allowExplode: boolean;
-    /**方块掉落*/ allowBlockFall: boolean;
-    /**允许破坏*/ allowDestroy: boolean;
-    /**允许凋零破坏*/ allowWitherDestroy: boolean;
-    /**允许放置 [x]*/ allowPlace: boolean;
-    /**允许玩家受伤*/ allowPlayerDamage: boolean;
-    /**允许敌对生物受伤*/ allowMonsterDamage: boolean;
-    /**允许友好、中立生物受伤*/ allowPassiveDamage: boolean;
-    /**允许对特殊实体造成伤害(船、矿车、画等)*/ allowSpecialDamage: boolean;
-    /**允许对特殊实体2造成伤害*/ allowCustomSpecialDamage: boolean;
-    /**允许打开箱子*/ allowOpenChest: boolean;
-    /**允许拾取物品*/ allowPickupItem: boolean;
-    /**允许末影人放下方块*/ allowEndermanLeaveBlock: boolean;
-
-    /**允许丢弃物品*/ allowDropItem: boolean;
-    /**允许投掷物*/ allowProjectileCreate: boolean;
-    /**允许骑乘实体*/ allowRideEntity: boolean;
-    /**允许骑乘矿车、船*/ allowRideTrans: boolean;
-    /**允许斧头去皮*/ allowAxePeeled: boolean;
-    /**允许液体流动*/ allowLiquidFlow: boolean;
-    /**允许幽匿尖啸体生长*/ allowSculkBlockGrowth: boolean;
-    /**允许怪物生成*/ allowMonsterSpawn: boolean;
-    /**允许动物生成*/ allowAnimalSpawn: boolean;
-    /**实体交互*/ allowInteractEntity: boolean;
-    /**实体破坏*/ allowActorDestroy: boolean;
-
-    /**使用铁砧*/ useAnvil: boolean;
-    /**使用木桶*/ useBarrel: boolean;
-    /**使用信标*/ useBeacon: boolean;
-    /**使用床*/ useBed: boolean;
-    /**使用钟*/ useBell: boolean;
-    /**使用高炉*/ useBlastFurnace: boolean;
-    /**使用酿造台*/ useBrewingStand: boolean;
-    /**使用营火*/ useCampfire: boolean;
-    /**使用打火石*/ useFlintAndSteel: boolean;
-    /**使用制图台*/ useCartographyTable: boolean;
-    /**使用堆肥桶*/ useComposter: boolean;
-    /**使用工作台*/ useCraftingTable: boolean;
-    /**使用阳光探测器*/ useDaylightDetector: boolean;
-    /**使用发射器*/ useDispenser: boolean;
-    /**使用投掷器*/ useDropper: boolean;
-    /**使用附魔台*/ useEnchantingTable: boolean;
-    /**使用门*/ useDoor: boolean;
-    /**使用栅栏门*/ useFenceGate: boolean;
-    /**使用熔炉*/ useFurnace: boolean;
-    /**使用砂轮*/ useGrindstone: boolean;
-    /**使用漏斗*/ useHopper: boolean;
-    /**使用唱片机*/ useJukebox: boolean;
-    /**使用织布机*/ useLoom: boolean;
-    /**使用切石机*/ useStonecutter: boolean;
-    /**使用音符盒*/ useNoteBlock: boolean;
-    /**使用合成器*/ useCrafter: boolean;
-    /**使用雕纹书架*/ useChiseledBookshelf: boolean;
-    /**吃蛋糕*/ useCake: boolean;
-    /**使用红石比较器*/ useComparator: boolean;
-    /**使用红石中继器*/ useRepeater: boolean;
-    /**使用潜影盒*/ useShulkerBox: boolean;
-    /**使用锻造台*/ useSmithingTable: boolean;
-    /**使用烟熏炉*/ useSmoker: boolean;
-    /**使用活板门*/ useTrapdoor: boolean;
-    /**使用讲台*/ useLectern: boolean;
-    /**使用炼药锅*/ useCauldron: boolean;
-    /**使用拉杆*/ useLever: boolean;
-    /**使用按钮*/ useButton: boolean;
-    /**使用重生锚*/ useRespawnAnchor: boolean;
-    /**使用物品展示框*/ useItemFrame: boolean;
-    /**使用钓鱼竿*/ useFishingHook: boolean;
-    /**使用桶*/ useBucket: boolean;
-    /**使用压力板*/ usePressurePlate: boolean;
-    /**使用盔甲架*/ useArmorStand: boolean;
-    /**使用骨粉*/ useBoneMeal: boolean;
-    /**使用锄头*/ useHoe: boolean;
-    /**使用锹*/ useShovel: boolean;
-    /**使用试炼宝库*/ useVault: boolean;
-    /**使用蜂巢蜂箱*/ useBeeNest: boolean;
-    /**放置船*/ placeBoat: boolean;
-    /**放置矿车*/ placeMinecart: boolean;
-
-    /**编辑花盆*/ editFlowerPot: boolean;
-    /**编辑告示牌*/ editSign: boolean;
+    environment: EnvironmentPerms;
+    role: RolePerms;
 }
 
 export enum LandType {

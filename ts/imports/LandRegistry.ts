@@ -16,7 +16,6 @@ import {Land} from "./Land.js";
 export type PlayerSettings = {
     /** 是否显示进入领地提示 */ showEnterLandTitle: boolean;
     /** 是否持续显示底部提示 */ showBottomContinuedTip: boolean;
-    /** 玩家语言 */ localeCode: string | "system" | "server";
 };
 
 export class LandRegistry {
