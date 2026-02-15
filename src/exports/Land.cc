@@ -3,8 +3,7 @@
 #include "pland/PLand.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/aabb/LandPos.h"
-#include "pland/land/LandContext.h"
-#include "pland/land/LandRegistry.h"
+#include "pland/land/repo/LandRegistry.h"
 #include "pland/utils/JsonUtil.h"
 
 
@@ -29,15 +28,6 @@ void Export_Class_Land() {
         return toLSE<land::LandAABB>(land->getAABB(), land->getDimensionId());
     });
 
-    exportAs("Land_setAABB", [&registry](int _landId, InternalLandAABB aabb) -> bool {
-        auto land = registry.getLand(_landId);
-        if (!land) {
-            return false;
-        }
-        auto val = toCpp<land::LandAABB>(aabb);
-        return land->setAABB(val);
-    });
-
     exportAs("Land_getTeleportPos", [&registry](int _landId) -> IntPos {
         auto land = registry.getLand(_landId);
         if (!land) {
@@ -57,7 +47,7 @@ void Export_Class_Land() {
     exportAs("Land_getId", [&registry](int _landId) -> int {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return -1;
+            return land::INVALID_LAND_ID;
         }
         return land->getId();
     });
@@ -65,7 +55,7 @@ void Export_Class_Land() {
     exportAs("Land_getDimensionId", [&registry](int _landId) -> int {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return -1;
+            return land::INVALID_LAND_ID;
         }
         return land->getDimensionId();
     });
@@ -103,6 +93,14 @@ void Export_Class_Land() {
             return;
         }
         land->setOwner(mce::UUID{owner});
+    });
+
+    exportAs("Land_getRawOwner", [&registry](int _landId) -> std::string {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return "";
+        }
+        return land->getRawOwner();
     });
 
     exportAs("Land_getMembers", [&registry](int _landId) -> std::vector<std::string> {
@@ -156,22 +154,6 @@ void Export_Class_Land() {
             return;
         }
         land->setName(name);
-    });
-
-    exportAs("Land_getDescribe", [&registry](int _landId) -> std::string {
-        auto land = registry.getLand(_landId);
-        if (!land) {
-            return "";
-        }
-        return land->getDescribe();
-    });
-
-    exportAs("Land_setDescribe", [&registry](int _landId, std::string const& describe) -> void {
-        auto land = registry.getLand(_landId);
-        if (!land) {
-            return;
-        }
-        land->setDescribe(describe);
     });
 
     exportAs("Land_getOriginalBuyPrice", [&registry](int _landId) -> int {
@@ -263,7 +245,7 @@ void Export_Class_Land() {
     exportAs("Land_getType", [&registry](int _landId) -> int {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return -1;
+            return land::INVALID_LAND_ID;
         }
         return static_cast<int>(land->getType());
     });
@@ -324,107 +306,41 @@ void Export_Class_Land() {
         return land->canCreateSubLand();
     });
 
-    exportAs("Land_getParentLand", [&registry](int _landId) -> int {
+    exportAs("Land_getParentLandID", [&registry](int _landId) -> int {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return -1;
+            return land::INVALID_LAND_ID;
         }
-        auto parentLand = land->getParentLand();
-        if (!parentLand) {
-            return -1;
-        }
-        return parentLand->getId();
+        return land->getParentLandID();
     });
 
-    exportAs("Land_getSubLands", [&registry](int _landId) -> std::vector<int> {
+    exportAs("Land_getSubLandIDs", [&registry](int _landId) -> std::vector<int> {
         auto land = registry.getLand(_landId);
         if (!land) {
             return {};
         }
-        auto             subLands = land->getSubLands();
+        auto             subLands = land->getSubLandIDs();
         std::vector<int> result;
         result.reserve(subLands.size());
-        std::transform(subLands.begin(), subLands.end(), std::back_inserter(result), [](auto& subLand) {
-            return subLand->getId();
-        });
+        std::transform(subLands.begin(), subLands.end(), std::back_inserter(result), [](auto i) { return i; });
         return result;
     });
 
     exportAs("Land_getNestedLevel", [&registry](int _landId) -> int {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return -1;
+            return land::INVALID_LAND_ID;
         }
         return land->getNestedLevel();
-    });
-
-    exportAs("Land_getRootLand", [&registry](int _landId) -> int {
-        auto land = registry.getLand(_landId);
-        if (!land) {
-            return -1;
-        }
-        auto rootLand = land->getRootLand();
-        if (!rootLand) {
-            return -1;
-        }
-        return rootLand->getId();
-    });
-
-    exportAs("Land_getFamilyTree", [&registry](int _landId) -> std::vector<int> {
-        auto land = registry.getLand(_landId);
-        if (!land) {
-            return {};
-        }
-        auto             familyTree = land->getFamilyTree();
-        std::vector<int> result;
-        result.reserve(familyTree.size());
-        std::transform(familyTree.begin(), familyTree.end(), std::back_inserter(result), [](auto& family) {
-            return family->getId();
-        });
-        return result;
-    });
-
-    exportAs("Land_getSelfAndAncestors", [&registry](int _landId) -> std::vector<int> {
-        auto land = registry.getLand(_landId);
-        if (!land) {
-            return {};
-        }
-        auto             selfAndAncestors = land->getSelfAndAncestors();
-        std::vector<int> result;
-        result.reserve(selfAndAncestors.size());
-        std::transform(
-            selfAndAncestors.begin(),
-            selfAndAncestors.end(),
-            std::back_inserter(result),
-            [](auto& ancestor) { return ancestor->getId(); }
-        );
-        return result;
-    });
-
-    exportAs("Land_getSelfAndDescendants", [&registry](int _landId) -> std::vector<int> {
-        auto land = registry.getLand(_landId);
-        if (!land) {
-            return {};
-        }
-        auto             selfAndDescendants = land->getSelfAndDescendants();
-        std::vector<int> result;
-        result.reserve(selfAndDescendants.size());
-        std::transform(
-            selfAndDescendants.begin(),
-            selfAndDescendants.end(),
-            std::back_inserter(result),
-            [](auto& descendant) { return descendant->getId(); }
-        );
-        return result;
     });
 
     exportAs("Land_getPermType", [&registry](int _landId, std::string const& uuid) -> int {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return -1;
+            return land::INVALID_LAND_ID;
         }
         if (!mce::UUID::canParse(uuid)) {
-            return -1;
+            return land::INVALID_LAND_ID;
         }
         return static_cast<int>(land->getPermType(mce::UUID(uuid)));
     });

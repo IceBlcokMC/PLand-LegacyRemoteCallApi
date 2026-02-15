@@ -2,11 +2,11 @@
 #include "pland/Global.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/aabb/LandPos.h"
-#include "pland/land/LandContext.h"
 #include "pland/utils/JsonUtil.h"
-
+#include <pland/land/repo/LandContext.h>
 
 #include "ExportDef.h"
+
 
 namespace ldapi {
 
@@ -65,6 +65,35 @@ auto toLSE(Args&&... args) {
 template <typename T, typename... Args>
 auto toCpp(Args&&... args) {
     return Converter<T>::toCpp(std::forward<Args>(args)...);
+}
+
+
+template <typename E>
+nlohmann::json asRPCResultVoid(E const& expected) {
+    nlohmann::json result = nlohmann::json::object();
+
+    if (!expected) {
+        result["ok"]    = false;
+        result["error"] = expected.error().message();
+        return result;
+    }
+
+    result["ok"] = true;
+    return result;
+}
+template <typename E, typename F>
+nlohmann::json asRPCResultWithValue(E const& expected, F&& onSuccess) {
+    nlohmann::json result = nlohmann::json::object();
+
+    if (!expected) {
+        result["ok"]    = false;
+        result["error"] = expected.error().message();
+        return result;
+    }
+
+    result["ok"]    = true;
+    result["value"] = std::forward<F>(onSuccess)();
+    return result;
 }
 
 

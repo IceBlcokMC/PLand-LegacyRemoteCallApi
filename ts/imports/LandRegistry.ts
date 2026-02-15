@@ -1,13 +1,14 @@
 import {
+    RPCResult,
+    Expected,
     importAs,
     isIntPos,
     LandID,
     LandPermType,
-    Result,
     UUID,
 } from "../ImportDef.js";
-import { LandAABB } from "./LandAABB.js";
-import { Land } from "./Land.js";
+import {LandAABB} from "./LandAABB.js";
+import {Land} from "./Land.js";
 
 /**
  * @warning 请不要增加、删除 key，否则会导致反射失败
@@ -18,37 +19,16 @@ export type PlayerSettings = {
     /** 玩家语言 */ localeCode: string | "system" | "server";
 };
 
-enum StorageLayerErrorCode {
-    Unknown = 0, // 未知错误
-    STLMapError = 1, // STL Map 操作失败
-    DBError = 2, // 数据库操作失败
-    DataConsistencyError = 3, // 数据一致性错误
-
-    // addLand
-    InvalidLand = 100, // 无效的领地数据
-    AssignLandIdFailed = 101, // 分配领地ID失败
-    LandRangeIllegal = 102, // 领地范围不合法
-
-    // removeLand
-    LandTypeWithRequireTypeNotMatch = 200, // 领地类型与要求类型不匹配
-}
-
 export class LandRegistry {
     static IMPORTS = {
         LandRegistry_isOperator: importAs("LandRegistry_isOperator"),
         LandRegistry_addOperator: importAs("LandRegistry_addOperator"),
         LandRegistry_removeOperator: importAs("LandRegistry_removeOperator"),
-        LandRegistry_hasPlayerSettings: importAs(
-            "LandRegistry_hasPlayerSettings",
-        ),
-        LandRegistry_getPlayerSettings: importAs(
-            "LandRegistry_getPlayerSettings",
-        ),
-        LandRegistry_setPlayerSettings: importAs(
-            "LandRegistry_setPlayerSettings",
+        LandRegistry_getOperators: importAs("LandRegistry_getOperators") as () => UUID[],
+        LandRegistry_getOrCreatePlayerSettings: importAs(
+            "LandRegistry_getOrCreatePlayerSettings",
         ),
         LandRegistry_getLand: importAs("LandRegistry_getLand"),
-        LandRegistry_removeLand: importAs("LandRegistry_removeLand"),
         LandRegistry_hasLand: importAs("LandRegistry_hasLand"),
         LandRegistry_getLands: importAs("LandRegistry_getLands"),
         LandRegistry_getLands1: importAs("LandRegistry_getLands1"),
@@ -66,22 +46,11 @@ export class LandRegistry {
         LandRegistry_removeOrdinaryLand: importAs(
             "LandRegistry_removeOrdinaryLand",
         ),
-        LandRegistry_removeSubLand: importAs("LandRegistry_removeSubLand"),
-        LandRegistry_removeLandAndSubLands: importAs(
-            "LandRegistry_removeLandAndSubLands",
-        ),
-        LandRegistry_removeLandAndPromoteSubLands: importAs(
-            "LandRegistry_removeLandAndPromoteSubLands",
-        ),
-        LandRegistry_removeLandAndTransferSubLands: importAs(
-            "LandRegistry_removeLandAndTransferSubLands",
-        ),
         LandRegistry_addOrdinaryLand: importAs("LandRegistry_addOrdinaryLand"),
-        LandRegistry_addSubLand: importAs("LandRegistry_addSubLand"),
     };
 
     constructor() {
-        throw new Error("PLand is a static class");
+        throw new Error("LandRegistry is a static class");
     }
 
     static isOperator(uuid: string): boolean {
@@ -96,27 +65,19 @@ export class LandRegistry {
         return LandRegistry.IMPORTS.LandRegistry_removeOperator(uuid);
     }
 
-    static hasPlayerSettings(uuid: string): boolean {
-        return LandRegistry.IMPORTS.LandRegistry_hasPlayerSettings(uuid);
+    static getOperators() {
+        return LandRegistry.IMPORTS.LandRegistry_getOperators();
     }
 
-    static getPlayerSettings(uuid: string): PlayerSettings | null {
+    static getOrCreatePlayerSettings(uuid: string): PlayerSettings | null {
         const jsonStr =
-            LandRegistry.IMPORTS.LandRegistry_getPlayerSettings(uuid);
+            LandRegistry.IMPORTS.LandRegistry_getOrCreatePlayerSettings(uuid);
         try {
             return JSON.parse(jsonStr);
         } catch (e) {
             logger.error(`Failed to parse player settings: ${jsonStr}`);
             return null;
         }
-    }
-
-    static setPlayerSettings(uuid: string, settings: PlayerSettings): boolean {
-        const jsonStr = JSON.stringify(settings);
-        return LandRegistry.IMPORTS.LandRegistry_setPlayerSettings(
-            uuid,
-            jsonStr,
-        );
     }
 
     static hasLand(id: LandID): boolean {
@@ -128,13 +89,13 @@ export class LandRegistry {
      * @param aabb 领地范围
      * @param is3D 是否是3D领地
      * @param owner 领地拥有者(UUID)
-     * @returns Result<Land, StorageLayerErrorCode> 成功返回 Land，失败返回错误码
+     * @returns Expected<Land>
      */
     static createAndAddOrdinaryLand(
         aabb: LandAABB,
         is3D: boolean,
         owner: UUID,
-    ): Result<Land, StorageLayerErrorCode> {
+    ): Expected<Land> {
         if (aabb.min.dimid != aabb.max.dimid) {
             throw new Error("AABB min and max must be in the same dimension");
         }
@@ -142,53 +103,10 @@ export class LandRegistry {
             [aabb.min, aabb.max],
             is3D,
             owner,
-        );
-
-        if (result[0] === "success") {
-            return new Result<Land, StorageLayerErrorCode>(
-                new Land(parseInt(result[1])),
-                null,
-            );
-        } else {
-            return new Result<Land, StorageLayerErrorCode>(
-                null,
-                parseInt(result[1]),
-            );
-        }
-    }
-
-    /**
-     * 创建并添加一个子领地
-     * @param subLandRange 子领地范围
-     * @returns Result<Land, StorageLayerErrorCode> 成功返回子领地对象，失败返回错误码
-     */
-    static createAndAddSubLand(
-        parent: Land,
-        subLandRange: LandAABB,
-    ): Result<Land, StorageLayerErrorCode> {
-        const result = LandRegistry.IMPORTS.LandRegistry_addSubLand(
-            parent.mLandId,
-            [subLandRange.min, subLandRange.max],
-        );
-
-        if (result[0] === "success") {
-            return new Result<Land, StorageLayerErrorCode>(
-                new Land(parseInt(result[1])),
-                null,
-            );
-        } else {
-            return new Result<Land, StorageLayerErrorCode>(
-                null,
-                parseInt(result[1]),
-            );
-        }
-    }
-
-    /**
-     * @deprecated 此 API 在 PLand 底层中已标记为废弃函数，将在未来版本中移除，请使用 removeOrdinaryLand() 代替
-     */
-    static removeLand(landID: LandID): boolean {
-        return LandRegistry.IMPORTS.LandRegistry_removeLand(landID);
+        ) as RPCResult<LandID>;
+        return new Expected(
+            result
+        ).map(id => new Land(id));
     }
 
     /**
@@ -196,91 +114,14 @@ export class LandRegistry {
      */
     static removeOrdinaryLand(
         land: Land | LandID,
-    ): Result<void, StorageLayerErrorCode> {
+    ): Expected<void> {
         const id =
             typeof land === "number"
                 ? land
-                : // @ts-ignore
-                  (land as Land).unique_id;
-        const res = LandRegistry.IMPORTS.LandRegistry_removeOrdinaryLand(id);
-        return new Result<void, StorageLayerErrorCode>(
-            res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode),
-        );
-    }
-
-    /**
-     * @brief 移除子领地
-     */
-    static removeSubLand(
-        land: Land | LandID,
-    ): Result<void, StorageLayerErrorCode> {
-        const id =
-            typeof land === "number"
-                ? land
-                : // @ts-ignore
-                  (land as Land).unique_id;
-        const res = LandRegistry.IMPORTS.LandRegistry_removeSubLand(id);
-        return new Result<void, StorageLayerErrorCode>(
-            res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode),
-        );
-    }
-
-    /**
-     * @brief 移除领地和其子领地
-     */
-    static removeLandAndSubLands(
-        land: Land | LandID,
-    ): Result<void, StorageLayerErrorCode> {
-        const id =
-            typeof land === "number"
-                ? land
-                : // @ts-ignore
-                  (land as Land).unique_id;
-        const res = LandRegistry.IMPORTS.LandRegistry_removeLandAndSubLands(id);
-        return new Result<void, StorageLayerErrorCode>(
-            res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode),
-        );
-    }
-
-    /**
-     * @brief 移除当前领地并提升子领地为普通领地
-     */
-    static removeLandAndPromoteSubLands(
-        land: Land | LandID,
-    ): Result<void, StorageLayerErrorCode> {
-        const id =
-            typeof land === "number"
-                ? land
-                : // @ts-ignore
-                  (land as Land).unique_id;
-        const res =
-            LandRegistry.IMPORTS.LandRegistry_removeLandAndPromoteSubLands(id);
-        return new Result<void, StorageLayerErrorCode>(
-            res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode),
-        );
-    }
-
-    /**
-     * @brief 移除当前领地并移交子领地给当前领地的父领地
-     */
-    static removeLandAndTransferSubLands(
-        land: Land | LandID,
-    ): Result<void, StorageLayerErrorCode> {
-        const id =
-            typeof land === "number"
-                ? land
-                : // @ts-ignore
-                  (land as Land).unique_id;
-        const res =
-            LandRegistry.IMPORTS.LandRegistry_removeLandAndTransferSubLands(id);
-        return new Result<void, StorageLayerErrorCode>(
-            res === -1 ? void 0 : null,
-            res === -1 ? null : (res as StorageLayerErrorCode),
-        );
+                :
+                (land as Land).mLandId;
+        const res = LandRegistry.IMPORTS.LandRegistry_removeOrdinaryLand(id) as RPCResult<void>;
+        return new Expected(res);
     }
 
     static getLand(landID: LandID): Land | null {

@@ -14,10 +14,23 @@
 #include "pland/PLand.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/land/Land.h"
-#include "pland/land/LandEvent.h"
 #include "pland/utils/JsonUtil.h"
 
-#include "pland/events/PlayerRequestCreateLandEvent.h"
+#include "pland/events/domain/LandResizedEvent.h"
+#include "pland/events/domain/MemberChangedEvent.h"
+#include "pland/events/domain/OwnerChangedEvent.h"
+#include "pland/events/economy/LandRefundFailedEvent.h"
+#include "pland/events/player/PlayerApplyLandRangeChangeEvent.h"
+#include "pland/events/player/PlayerBuyLandEvent.h"
+#include "pland/events/player/PlayerChangeLandMemberEvent.h"
+#include "pland/events/player/PlayerChangeLandNameEvent.h"
+#include "pland/events/player/PlayerDeleteLandEvent.h"
+#include "pland/events/player/PlayerMoveEvent.h"
+#include "pland/events/player/PlayerRequestChangeLandRangeEvent.h"
+#include "pland/events/player/PlayerRequestCreateLandEvent.h"
+#include "pland/events/player/PlayerTransferLandEvent.h"
+
+#include "pland/land/LandResizeSettlement.h"
 
 #include <memory>
 #include <unordered_map>
@@ -90,6 +103,146 @@ void Export_LDEvents() {
             }
 
             switch (doHash(eventName)) {
+            case doHash("LandResizedEvent"): {
+                REGISTER_LISTENER(
+                    land::event::LandResizedEvent,
+                    (int, IntPos, IntPos),
+                    (ev.land()->getId(),
+                     IntPos{ev.newRange().min.as<>(), ev.land()->getDimensionId()},
+                     IntPos{ev.newRange().max.as<>(), ev.land()->getParentLandID()}),
+                )
+            }
+            case doHash("MemberChangedEvent"): {
+                REGISTER_LISTENER(
+                    land::event::MemberChangedEvent,
+                    (int, std::string, bool),
+                    (ev.land()->getId(), ev.target().asString(), ev.isAdd()),
+                )
+            }
+            case doHash("OwnerChangedEvent"): {
+                REGISTER_LISTENER(
+                    land::event::OwnerChangedEvent,
+                    (int, std::string, std::string),
+                    (ev.land()->getId(), ev.oldOwner().asString(), ev.newOwner().asString()),
+                )
+            }
+            case doHash("LandRefundFailedEvent"): {
+                REGISTER_LISTENER(
+                    land::event::LandRefundFailedEvent,
+                    (int, std::string, int),
+                    (ev.land()->getId(), ev.targetPlayer().asString(), ev.refundAmount()),
+                )
+            }
+
+            case doHash("PlayerApplyLandRangeChangeBeforeEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerApplyLandRangeChangeBeforeEvent,
+                    (Player*, int, IntPos, IntPos, std::string, int, int),
+                    (&ev.self(),
+                     ev.land()->getId(),
+                     {ev.newRange().min.as<>(), ev.land()->getDimensionId()},
+                     {ev.newRange().max.as<>(), ev.land()->getDimensionId()},
+                     magic_enum::enum_name(ev.resizeSettlement().type).data(),
+                     ev.resizeSettlement().newTotalPrice,
+                     ev.resizeSettlement().amount),
+                )
+            }
+            case doHash("PlayerApplyLandRangeChangeAfterEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerApplyLandRangeChangeAfterEvent,
+                    (Player*, int, IntPos, IntPos, std::string, int, int),
+                    (&ev.self(),
+                     ev.land()->getId(),
+                     {ev.newRange().min.as<>(), ev.land()->getDimensionId()},
+                     {ev.newRange().max.as<>(), ev.land()->getDimensionId()},
+                     magic_enum::enum_name(ev.resizeSettlement().type).data(),
+                     ev.resizeSettlement().newTotalPrice,
+                     ev.resizeSettlement().amount),
+                )
+            }
+
+            case doHash("PlayerBuyLandBeforeEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerBuyLandBeforeEvent,
+                    (Player*, int, std::string),
+                    (&ev.self(), ev.payMoney(), magic_enum::enum_name(ev.landType()).data()),
+                )
+            }
+            case doHash("PlayerBuyLandAfterEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerBuyLandAfterEvent,
+                    (Player*, int, int),
+                    (&ev.self(), ev.land()->getId(), ev.payMoney()),
+                )
+            }
+
+            case doHash("PlayerChangeLandMemberBeforeEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerChangeLandMemberBeforeEvent,
+                    (Player*, int, std::string, bool),
+                    (&ev.self(), ev.land()->getId(), ev.target().asString(), ev.isAdd()),
+                )
+            }
+            case doHash("PlayerChangeLandMemberAfterEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerChangeLandMemberAfterEvent,
+                    (Player*, int, std::string, bool),
+                    (&ev.self(), ev.land()->getId(), ev.target().asString(), ev.isAdd()),
+                )
+            }
+
+            case doHash("PlayerChangeLandNameBeforeEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerChangeLandNameBeforeEvent,
+                    (Player*, int, std::string),
+                    (&ev.self(), ev.land()->getId(), ev.newName()),
+                )
+            }
+            case doHash("PlayerChangeLandNameAfterEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerChangeLandNameAfterEvent,
+                    (Player*, int, std::string),
+                    (&ev.self(), ev.land()->getId(), ev.newName()),
+                )
+            }
+
+            case doHash("PlayerDeleteLandBeforeEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerDeleteLandBeforeEvent,
+                    (Player*, int),
+                    (&ev.self(), ev.land()->getId()),
+                )
+            }
+            case doHash("PlayerDeleteLandAfterEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerDeleteLandAfterEvent,
+                    (Player*, int),
+                    (&ev.self(), ev.land()->getId()),
+                )
+            }
+
+            case doHash("PlayerEnterLandEvent"): {
+                REGISTER_LISTENER(land::event::PlayerEnterLandEvent, (Player*, int), (&ev.self(), ev.landId()), )
+            }
+            case doHash("PlayerLeaveLandEvent"): {
+                REGISTER_LISTENER(land::event::PlayerLeaveLandEvent, (Player*, int), (&ev.self(), ev.landId()), )
+            }
+
+            case doHash("PlayerRequestChangeLandRangeBeforeEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerRequestChangeLandRangeBeforeEvent,
+                    (Player*, int),
+                    (&ev.self(), ev.land()->getId()),
+                )
+            }
+            case doHash("PlayerRequestChangeLandRangeAfterEvent"): {
+                REGISTER_LISTENER(
+                    land::event::PlayerRequestChangeLandRangeAfterEvent,
+                    (Player*, int),
+                    (&ev.self(), ev.land()->getId()),
+                )
+            }
+
             case doHash("PlayerRequestCreateLandEvent"): {
                 REGISTER_LISTENER(
                     land::event::PlayerRequestCreateLandEvent,
@@ -98,100 +251,18 @@ void Export_LDEvents() {
                 )
             }
 
-            case doHash("PlayerBuyLandBeforeEvent"): {
+            case doHash("PlayerTransferLandBeforeEvent"): {
                 REGISTER_LISTENER(
-                    land::PlayerBuyLandBeforeEvent,
-                    (Player*, int, IntPos, IntPos, bool),
-                    (&ev.getPlayer(),
-                     ev.getPrice(),
-                     IntPos{ev.getSelector()->getPointA().value(), ev.getSelector()->getDimensionId()},
-                     IntPos{ev.getSelector()->getPointB().value(), ev.getSelector()->getDimensionId()},
-                     ev.getSelector()->is3D()),
-                    ev.cancel()
+                    land::event::PlayerTransferLandBeforeEvent,
+                    (Player*, int, std::string),
+                    (&ev.self(), ev.land()->getId(), ev.newOwner().asString()),
                 )
             }
-            case doHash("PlayerBuyLandAfterEvent"): {
+            case doHash("PlayerTransferLandAfterEvent"): {
                 REGISTER_LISTENER(
-                    land::PlayerBuyLandAfterEvent,
-                    (Player*, int),
-                    (&ev.getPlayer(), ev.getLand()->getId()),
-                )
-            }
-
-            case doHash("PlayerEnterLandEvent"): {
-                REGISTER_LISTENER(land::PlayerEnterLandEvent, (Player*, int), (&ev.getPlayer(), ev.getLandID()), )
-            }
-            case doHash("PlayerLeaveLandEvent"): {
-                REGISTER_LISTENER(land::PlayerLeaveLandEvent, (Player*, int), (&ev.getPlayer(), ev.getLandID()), )
-            }
-
-            case doHash("PlayerDeleteLandBeforeEvent"): {
-                REGISTER_LISTENER(
-                    land::PlayerDeleteLandBeforeEvent,
-                    (Player*, int, int),
-                    (&ev.getPlayer(), ev.getLandID(), ev.getRefundPrice()),
-                    ev.cancel()
-                )
-            }
-            case doHash("PlayerDeleteLandAfterEvent"): {
-                REGISTER_LISTENER(land::PlayerDeleteLandAfterEvent, (Player*, int), (&ev.getPlayer(), ev.getLandID()), )
-            }
-
-            case doHash("LandMemberChangeBeforeEvent"): {
-                REGISTER_LISTENER(
-                    land::LandMemberChangeBeforeEvent,
-                    (Player*, std::string, int, bool),
-                    (&ev.getPlayer(), ev.getTargetPlayer().asString(), ev.getLandID(), ev.isAdd()),
-                    ev.cancel()
-                )
-            }
-            case doHash("LandMemberChangeAfterEvent"): {
-                REGISTER_LISTENER(
-                    land::LandMemberChangeAfterEvent,
-                    (Player*, std::string, int, bool),
-                    (&ev.getPlayer(), ev.getTargetPlayer().asString(), ev.getLandID(), ev.isAdd()),
-                )
-            }
-
-            case doHash("LandOwnerChangeBeforeEvent"): {
-                REGISTER_LISTENER(
-                    land::LandOwnerChangeBeforeEvent,
-                    (Player*, std::string, int),
-                    (&ev.getPlayer(), ev.getNewOwner().asString(), ev.getLandID()),
-                    ev.cancel()
-                )
-            }
-            case doHash("LandOwnerChangeAfterEvent"): {
-                REGISTER_LISTENER(
-                    land::LandOwnerChangeAfterEvent,
-                    (Player*, std::string, int),
-                    (&ev.getPlayer(), ev.getNewOwner().asString(), ev.getLandID()),
-                )
-            }
-
-            case doHash("LandRangeChangeBeforeEvent"): {
-                REGISTER_LISTENER(
-                    land::LandRangeChangeBeforeEvent,
-                    (Player*, int, IntPos, IntPos, int, int),
-                    (&ev.getPlayer(),
-                     ev.getLand()->getId(),
-                     IntPos{ev.getNewRange().min.as(), ev.getLand()->getDimensionId()},
-                     IntPos{ev.getNewRange().max.as(), ev.getLand()->getDimensionId()},
-                     ev.getNeedPay(),
-                     ev.getRefundPrice()),
-                    ev.cancel()
-                )
-            }
-            case doHash("LandRangeChangeAfterEvent"): {
-                REGISTER_LISTENER(
-                    land::LandRangeChangeAfterEvent,
-                    (Player*, int, IntPos, IntPos, int, int),
-                    (&ev.getPlayer(),
-                     ev.getLand()->getId(),
-                     IntPos{ev.getNewRange().min.as(), ev.getLand()->getDimensionId()},
-                     IntPos{ev.getNewRange().max.as(), ev.getLand()->getDimensionId()},
-                     ev.getNeedPay(),
-                     ev.getRefundPrice()),
+                    land::event::PlayerTransferLandAfterEvent,
+                    (Player*, int, std::string),
+                    (&ev.self(), ev.land()->getId(), ev.newOwner().asString()),
                 )
             }
 

@@ -5,7 +5,7 @@
 #include "pland/BuildInfo.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/land/Land.h"
-#include "pland/land/LandRegistry.h"
+#include "pland/land/repo/LandRegistry.h"
 #include "pland/utils/JsonUtil.h"
 
 #include "mc/platform/UUID.h"
@@ -41,45 +41,24 @@ void Export_Class_LandRegistry() {
         return land::PLand::getInstance().getLandRegistry().removeOperator(mce::UUID{uuid});
     });
 
-    exportAs("LandRegistry_hasPlayerSettings", [](std::string const& uuid) -> bool {
-        if (!mce::UUID::canParse(uuid)) {
-            return false;
-        }
-        return land::PLand::getInstance().getLandRegistry().hasPlayerSettings(mce::UUID{uuid});
+    exportAs("LandRegistry_getOperators", []() -> std::vector<std::string> {
+        auto& ops = land::PLand::getInstance().getLandRegistry().getOperators();
+        return std::vector<std::string>{ops.begin(), ops.end()};
     });
 
-    exportAs("LandRegistry_getPlayerSettings", [](std::string const& uuid) -> std::string {
+    exportAs("LandRegistry_getOrCreatePlayerSettings", [](std::string const& uuid) -> std::string {
         if (!mce::UUID::canParse(uuid)) {
             return {};
         }
         try {
             // struct -> json -> std::string
-            auto settings = land::PLand::getInstance().getLandRegistry().getPlayerSettings(mce::UUID{uuid});
-            if (!settings) {
-                return {};
-            }
-            auto j = land::json_util::struct2json(*settings);
+            auto& settings = land::PLand::getInstance().getLandRegistry().getOrCreatePlayerSettings(mce::UUID{uuid});
+            auto  j        = land::json_util::struct2json(settings);
             return j.dump();
         } catch (...) {
             return {};
         }
     });
-
-    exportAs("LandRegistry_setPlayerSettings", [](std::string const& uuid, std::string const& jsonStr) -> bool {
-        if (!mce::UUID::canParse(uuid)) {
-            return false;
-        }
-        try {
-            // jsonStr -> json -> struct
-            auto json = nlohmann::json::parse(jsonStr);
-            auto set  = land::PlayerSettings{};
-            land::json_util::json2structWithDiffPatch(json, set);
-            return land::PLand::getInstance().getLandRegistry().setPlayerSettings(mce::UUID{uuid}, std::move(set));
-        } catch (...) {
-            return false;
-        }
-    });
-
 
     exportAs("LandRegistry_hasLand", [](int id) -> bool {
         return land::PLand::getInstance().getLandRegistry().hasLand(id);
@@ -87,7 +66,7 @@ void Export_Class_LandRegistry() {
 
     exportAs(
         "LandRegistry_addOrdinaryLand",
-        [](InternalLandAABB iaabb, bool is3D, std::string const& owner) -> std::vector<std::string> {
+        [](InternalLandAABB iaabb, bool is3D, std::string const& owner) -> std::string {
             if (iaabb[0].second != iaabb[1].second) {
                 throw std::runtime_error("LandRegistry_addOrdinaryLand: Invalid AABB");
             }
@@ -98,49 +77,11 @@ void Export_Class_LandRegistry() {
             auto aabb  = toCpp<land::LandAABB>(iaabb);
             aabb.fix();
 
-            auto land   = land::Land::make(aabb, dimId, is3D, mce::UUID{owner});
-            auto result = land::PLand::getInstance().getLandRegistry().addOrdinaryLand(land);
-
-            std::vector<std::string> ret;
-            ret.reserve(2);
-
-            if (result.has_value()) {
-                ret.push_back("success");
-                ret.push_back(std::to_string(land->getId()));
-            } else {
-                ret.push_back("error");
-                ret.push_back(std::to_string(static_cast<int>(result.error())));
-            }
-
-            return ret;
+            auto land     = land::Land::make(aabb, dimId, is3D, mce::UUID{owner});
+            auto expected = land::PLand::getInstance().getLandRegistry().addOrdinaryLand(land);
+            return asRPCResultWithValue(expected, [land]() { return land->getId(); });
         }
     );
-
-    exportAs("LandRegistry_addSubLand", [](int parentLandId, InternalLandAABB iaabb) -> std::vector<std::string> {
-        auto& registry  = land::PLand::getInstance().getLandRegistry();
-        auto  parentPtr = registry.getLand(parentLandId);
-        if (!parentPtr) {
-            throw std::runtime_error("LandRegistry_addSubLand: Invalid parent land id");
-        }
-        auto aabb = toCpp<land::LandAABB>(iaabb);
-        aabb.fix();
-
-        auto subLand = land::Land::make(aabb, parentPtr->getDimensionId(), true, parentPtr->getOwner());
-        auto result  = registry.addSubLand(parentPtr, subLand);
-
-        std::vector<std::string> ret;
-        ret.reserve(2);
-
-        if (result.has_value()) {
-            ret.push_back("success");
-            ret.push_back(std::to_string(subLand->getId()));
-        } else {
-            ret.push_back("error");
-            ret.push_back(std::to_string(static_cast<int>(result.error())));
-        }
-
-        return ret;
-    });
 
     exportAs("LandRegistry_getLand", [](int id) -> int {
         auto land = land::PLand::getInstance().getLandRegistry().getLand(id);
@@ -148,35 +89,11 @@ void Export_Class_LandRegistry() {
         return land->getId();
     });
 
-    exportAs("LandRegistry_removeLand", [](int id) -> bool {
-        return land::PLand::getInstance().getLandRegistry().removeLand(id);
-    });
     exportAs("LandRegistry_removeOrdinaryLand", [](int id) -> int {
         auto ptr    = land::PLand::getInstance().getLandRegistry().getLand(id);
         auto result = land::PLand::getInstance().getLandRegistry().removeOrdinaryLand(ptr);
-        return result.has_value() ? -1 : static_cast<int>(result.error());
+        return asRPCResultVoid(result);
     });
-    exportAs("LandRegistry_removeSubLand", [](int id) -> int {
-        auto ptr    = land::PLand::getInstance().getLandRegistry().getLand(id);
-        auto result = land::PLand::getInstance().getLandRegistry().removeSubLand(ptr);
-        return result.has_value() ? -1 : static_cast<int>(result.error());
-    });
-    exportAs("LandRegistry_removeLandAndSubLands", [](int id) -> int {
-        auto ptr    = land::PLand::getInstance().getLandRegistry().getLand(id);
-        auto result = land::PLand::getInstance().getLandRegistry().removeLandAndSubLands(ptr);
-        return result.has_value() ? -1 : static_cast<int>(result.error());
-    });
-    exportAs("LandRegistry_removeLandAndPromoteSubLands", [](int id) -> int {
-        auto ptr    = land::PLand::getInstance().getLandRegistry().getLand(id);
-        auto result = land::PLand::getInstance().getLandRegistry().removeLandAndPromoteSubLands(ptr);
-        return result.has_value() ? -1 : static_cast<int>(result.error());
-    });
-    exportAs("LandRegistry_removeLandAndTransferSubLands", [](int id) -> int {
-        auto ptr    = land::PLand::getInstance().getLandRegistry().getLand(id);
-        auto result = land::PLand::getInstance().getLandRegistry().removeLandAndTransferSubLands(ptr);
-        return result.has_value() ? -1 : static_cast<int>(result.error());
-    });
-
 
     using LandList = std::vector<land::LandID>;
     exportAs("LandRegistry_getLands", []() -> LandList {

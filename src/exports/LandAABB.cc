@@ -7,7 +7,9 @@ namespace ldapi {
 
 
 void Export_Class_LandAABB() {
-    static auto Make = [](IntPos const& a, IntPos const& b) { return land::LandAABB::make(a.first, b.first); };
+    static auto Make = [](IntPos const& a, IntPos const& b) {
+        return land::LandAABB::make(land::LandPos::make(a.first), land::LandPos::make(b.first));
+    };
 
     exportAs("LandAABB_fix", [](IntPos const& a, IntPos const& b) -> std::vector<IntPos> {
         auto p = Make(a, b);
@@ -64,7 +66,38 @@ void Export_Class_LandAABB() {
         auto                res = p.getRange();
         std::vector<IntPos> li;
         for (auto pos : res) {
-            li.push_back(IntPos{pos, a.second});
+            li.emplace_back(pos, a.second);
+        }
+        return li;
+    });
+
+    exportAs("LandAABB_getVertices", [](IntPos const& a, IntPos const& b) -> std::vector<FloatPos> {
+        auto                  ab = Make(a, b);
+        std::vector<FloatPos> res;
+        for (auto point : ab.getVertices()) {
+            res.emplace_back(point, a.second);
+        }
+        return res;
+    });
+
+    exportAs("LandAABB_getCorners", [](IntPos const& a, IntPos const& b) -> std::vector<FloatPos> {
+        auto                  ab = Make(a, b);
+        std::vector<FloatPos> res;
+        for (auto point : ab.getCorners()) {
+            res.emplace_back(point, a.second);
+        }
+        return res;
+    });
+
+    exportAs("LandAABB_getEdges", [](IntPos const& a, IntPos const& b) -> std::vector<std::vector<IntPos>> {
+        auto                             p = Make(a, b);
+        std::vector<std::vector<IntPos>> li;
+        for (auto& pos : p.getEdges()) {
+            std::vector el = {
+                IntPos{pos.first,  a.second},
+                IntPos{pos.second, b.second}
+            };
+            li.push_back(std::move(el));
         }
         return li;
     });

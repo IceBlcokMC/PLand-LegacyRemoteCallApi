@@ -1,4 +1,6 @@
-import { ImportNamespace } from "../ImportDef.js";
+import {importAs, ImportNamespace} from "../ImportDef.js";
+
+type FixedArray<T, L extends number> = [T, ...T[]] & { length: L };
 
 export class LandAABB {
     // 导入表，请勿修改
@@ -21,6 +23,9 @@ export class LandAABB {
         LandAABB_toString: ll.imports(ImportNamespace, "LandAABB_toString"),
         LandAABB_getBorder: ll.imports(ImportNamespace, "LandAABB_getBorder"),
         LandAABB_getRange: ll.imports(ImportNamespace, "LandAABB_getRange"),
+        LandAABB_getVertices: importAs("LandAABB_getVertices") as (a: IntPos, b: IntPos) => FixedArray<FloatPos, 4>,
+        LandAABB_getCorners: importAs("LandAABB_getCorners") as (a: IntPos, b: IntPos) => FixedArray<FloatPos, 8>,
+        LandAABB_getEdges: importAs("LandAABB_getEdges") as (a: IntPos, b: IntPos) => Array<FixedArray<FloatPos, 2>>,
         LandAABB_hasPos: ll.imports(ImportNamespace, "LandAABB_hasPos"),
         LandAABB_isCollision: ll.imports(
             ImportNamespace,
@@ -51,10 +56,12 @@ export class LandAABB {
     getSpanX(): number {
         return LandAABB.IMPORTS.LandAABB_getSpanX(this.min, this.max);
     }
+
     // Y 轴坐标跨度 (height)
     getSpanY(): number {
         return LandAABB.IMPORTS.LandAABB_getSpanY(this.min, this.max);
     }
+
     // Z 轴坐标跨度 (width)
     getSpanZ(): number {
         return LandAABB.IMPORTS.LandAABB_getSpanZ(this.min, this.max);
@@ -63,16 +70,32 @@ export class LandAABB {
     /** @deprecated removed in v0.17.0 */ getDepth(): number {
         return this.getSpanX();
     }
+
     /** @deprecated removed in v0.17.0 */ getHeight(): number {
         return this.getSpanY();
     }
+
     /** @deprecated removed in v0.17.0 */ getWidth(): number {
         return this.getSpanZ();
+    }
+
+    // AABB 区域内各轴包含的方块数量
+    getBlockCountX(): number {
+        return this.getSpanX() + 1;
+    }
+
+    getBlockCountY(): number {
+        return this.getSpanY() + 1;
+    }
+
+    getBlockCountZ(): number {
+        return this.getSpanZ() + 1;
     }
 
     getSquare(): number {
         return LandAABB.IMPORTS.LandAABB_getSquare(this.min, this.max);
     }
+
     getVolume(): number {
         return LandAABB.IMPORTS.LandAABB_getVolume(this.min, this.max);
     }
@@ -95,6 +118,27 @@ export class LandAABB {
      */
     getRange(): IntPos[] {
         return LandAABB.IMPORTS.LandAABB_getRange(this.min, this.max);
+    }
+
+    /**
+     * @brief 获取 AABB 区域的顶点坐标 (4个角点，平面)
+     */
+    getVertices() {
+        return LandAABB.IMPORTS.LandAABB_getVertices(this.min, this.max);
+    }
+
+    /**
+     * @brief 获取 AABB 区域的顶点坐标 (8个角点，立方体)
+     */
+    getCorners() {
+        return LandAABB.IMPORTS.LandAABB_getCorners(this.min, this.max);
+    }
+
+    /**
+     * @brief 获取立方体 Box 的 12 条边线(每条边线有两个点)
+     */
+    getEdges() {
+        return LandAABB.IMPORTS.LandAABB_getEdges(this.min, this.max);
     }
 
     hasPos(pos: IntPos, includeY = true): boolean {

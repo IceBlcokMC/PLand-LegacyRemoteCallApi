@@ -1,56 +1,46 @@
-import { ImportNamespace, LandID, UUID } from "../ImportDef.js";
+import {ImportNamespace, LandID, UUID} from "../ImportDef.js";
+
 
 type EventParams = {
-    PlayerEnterLandEvent: [player: Player, landID: LandID];
-    PlayerLeaveLandEvent: [player: Player, landID: LandID];
+    LandResizedEvent: [id: LandID, min: IntPos, max: IntPos],
+    MemberChangedEvent: [id: LandID, target: UUID, isAdd: boolean],
+    OwnerChangedEvent: [id: LandID, oldOwner: UUID, newOwner: UUID]
 
-    /** @version v0.17.0 Added */
-    PlayerRequestCreateLandEvent: [player: Player, type: "Ordinary" | "Sub"];
+    LandRefundFailedEvent: [id: LandID, target: UUID, amount: number],
 
-    PlayerBuyLandBeforeEvent: [
-        player: Player,
-        price: number,
-        posA: IntPos,
-        posB: IntPos,
-        is3DLand: boolean,
-    ];
-    PlayerBuyLandAfterEvent: [player: Player, landID: LandID];
-    PlayerDeleteLandBeforeEvent: [
-        player: Player,
-        landID: LandID,
-        refundPrice: number,
-    ];
-    PlayerDeleteLandAfterEvent: [player: Player, landID: LandID];
-    LandMemberChangeBeforeEvent: [
-        player: Player,
-        targetPlayer: UUID, // 目标玩家 (被添加/移除的玩家)
-        landID: LandID,
-        isAdd: boolean,
-    ];
-    LandMemberChangeAfterEvent: [
-        player: Player,
-        targetPlayer: UUID, // 目标玩家 (被添加/移除的玩家)
-        landID: LandID,
-        isAdd: boolean,
-    ];
-    LandOwnerChangeBeforeEvent: [playe: Player, newOwner: UUID, landID: LandID];
-    LandOwnerChangeAfterEvent: [playe: Player, newOwner: UUID, landID: LandID];
-    LandRangeChangeBeforeEvent: [
-        player: Player,
-        landID: LandID,
-        newPosA: IntPos, // 新的范围A点
-        newPosB: IntPos, // 新范围B点
-        needPay: number, // 需要支付的金额
-        refundPrice: number, // 退款的金额
-    ];
-    LandRangeChangeAfterEvent: [
-        player: Player,
-        landID: LandID,
-        newPosA: IntPos, // 新的范围A点
-        newPosB: IntPos, // 新范围B点
-        needPay: number, // 需要支付的金额
-        refundPrice: number, // 退款的金额
-    ];
+    /**
+     * player 操作玩家
+     * id 领地ID
+     * min, max 新范围
+     * type 更改领地大小结算对象 的 结算类型 -----\
+     * newTotalPrice 新范围总价           -----|----> LandResizeSettlement
+     * amount 差价（始终为正）            -----/
+     */
+    PlayerApplyLandRangeChangeBeforeEvent: [player: Player, id: LandID, min: IntPos, max: IntPos, type: "NoChange" | "Pay" | "Refund", newTotalPrice: number, amount: number]
+    PlayerApplyLandRangeChangeAfterEvent: [player: Player, id: LandID, min: IntPos, max: IntPos, type: "NoChange" | "Pay" | "Refund", newTotalPrice: number, amount: number]
+
+    PlayerBuyLandBeforeEvent: [player: Player, payMoney: number, landType: "Ordinary" | "Parent" | "Mix" | "Sub"]
+    PlayerBuyLandAfterEvent: [player: Player, id: LandID, payMoney: number]
+
+    PlayerChangeLandMemberBeforeEvent: [player: Player, id: LandID, target: UUID, isAdd: boolean]
+    PlayerChangeLandMemberAfterEvent: [player: Player, id: LandID, target: UUID, isAdd: boolean]
+
+    PlayerChangeLandNameBeforeEvent: [player: Player, id: LandID, newName: string]
+    PlayerChangeLandNameAfterEvent: [player: Player, id: LandID, newName: string]
+
+    PlayerDeleteLandBeforeEvent: [player: Player, id: LandID]
+    PlayerDeleteLandAfterEvent: [player: Player, id: LandID]
+
+    PlayerEnterLandEvent: [player: Player, id: LandID]
+    PlayerLeaveLandEvent: [player: Player, id: LandID]
+
+    PlayerRequestChangeLandRangeBeforeEvent: [player: Player, id: LandID]
+    PlayerRequestChangeLandRangeAfterEvent: [player: Player, id: LandID]
+
+    PlayerRequestCreateLandEvent: [player: Player, landType: "Ordinary" | "Parent" | "Mix" | "Sub"]
+
+    PlayerTransferLandBeforeEvent: [player: Player, id: LandID, newOwner: UUID],
+    PlayerTransferLandAfterEvent: [player: Player, id: LandID, newOwner: UUID],
 };
 
 export type EventType = keyof EventParams;

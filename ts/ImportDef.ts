@@ -3,10 +3,10 @@
 const ExportNamespace = "PLand_LDAPI"; // ExportDef.h
 export const ImportNamespace = ExportNamespace;
 
-export type LandID = number; // uint64_t
-export type ChunkID = number; // uint64_t
-export type LandDimid = number; // int
-export type UUID = string; // std::string
+export type LandID = number;
+export type UUID = string;
+
+export const INVALID_LAND_ID: LandID = -1;
 
 export enum LandPermType {
     Operator = 0, // 领地操作员（管理）
@@ -27,40 +27,77 @@ export function isIntPos(obj: any): obj is IntPos {
     return obj instanceof IntPos;
 }
 
-/**
- * Result 类，表示一个可能包含值或错误的类型
- * 对应 PLand C++ 侧的 Result<T, E>
- * @template T 值的类型
- * @template E 错误的类型
- */
-export class Result<T, E = string> {
-    private readonly _value: T | null;
-    private readonly _error: E | null;
+export type RPCSuccess<T> =
+    T extends void
+        ? { ok: true }
+        : { ok: true; value: T };
 
-    constructor(value: T | null, error: E | null) {
-        this._value = value;
-        this._error = error;
+export type RPCFailure = { ok: false; error: string };
+
+export type RPCResult<T> = RPCSuccess<T> | RPCFailure;
+
+export class Expected<T> {
+    private result: RPCResult<T>;
+
+    constructor(res: RPCResult<T>) {
+        this.result = res;
+    }
+
+    isOk(): boolean {
+        return this.result.ok;
     }
 
     hasValue(): boolean {
-        return this._value !== null;
+        return "value" in this.result;
     }
 
     hasError(): boolean {
-        return this._error !== null;
+        return "error" in this.result;
     }
 
-    value(): T {
-        if (!this.hasValue()) {
-            throw new Error("Result has no value");
+    unwrap(): T {
+        if (!this.result.ok) {
+            throw new Error(this.result.error);
         }
-        return this._value as T;
+
+        if ("value" in this.result) {
+            return this.result.value;
+        }
+
+        return undefined as T;
     }
 
-    error(): E {
-        if (!this.hasError()) {
-            throw new Error("Result has no error");
+    unwrapOr(defaultValue: T): T {
+        if (!this.isOk()) {
+            return defaultValue;
         }
-        return this._error as E;
+        return this.unwrap();
+    }
+
+    map<U>(this: Expected<Exclude<T, void>>, func: (value: T) => U): Expected<U> {
+        if (!this.result.ok) {
+            return new Expected<U>(this.result as any);
+        }
+
+        if (!("value" in this.result)) {
+            // T = void
+            return new Expected<U>({
+                ok: true,
+                value: func(undefined as T)
+            } as RPCSuccess<U>);
+        }
+
+        try {
+            const newValue = func(this.result.value);
+            return new Expected<U>({
+                ok: true,
+                value: newValue
+            } as RPCSuccess<U>);
+        } catch (e: any) {
+            return new Expected<U>({
+                ok: false,
+                error: e?.message ?? String(e)
+            });
+        }
     }
 }

@@ -1,11 +1,11 @@
 import {
-    importAs,
+    importAs, INVALID_LAND_ID,
     isIntPos,
     LandID,
     LandPermType,
     UUID,
 } from "../ImportDef.js";
-import { LandAABB } from "./LandAABB.js";
+import {LandAABB} from "./LandAABB.js";
 
 export interface LandPermTable {
     /**火焰蔓延*/ allowFireSpread: boolean;
@@ -110,11 +110,6 @@ export class Land {
             id: LandID
         ) => InternalLandAABB,
 
-        Land_setAABB: importAs("Land_setAABB") as (
-            id: LandID,
-            aabb: InternalLandAABB
-        ) => boolean,
-
         Land_getTeleportPos: importAs("Land_getTeleportPos") as (
             id: LandID
         ) => IntPos,
@@ -146,6 +141,8 @@ export class Land {
             owner: UUID
         ) => void,
 
+        Land_getRawOwner: importAs("Land_getRawOwner") as (id: LandID) => string,
+
         Land_getMembers: importAs("Land_getMembers") as (id: LandID) => UUID[],
 
         Land_addLandMember: importAs("Land_addLandMember") as (
@@ -163,15 +160,6 @@ export class Land {
         Land_setName: importAs("Land_setName") as (
             id: LandID,
             name: string
-        ) => void,
-
-        Land_getDescribe: importAs("Land_getDescribe") as (
-            id: LandID
-        ) => string,
-
-        Land_setDescribe: importAs("Land_setDescribe") as (
-            id: LandID,
-            describe: string
         ) => void,
 
         Land_getOriginalBuyPrice: importAs("Land_getOriginalBuyPrice") as (
@@ -232,28 +220,15 @@ export class Land {
             id: LandID
         ) => boolean,
 
-        Land_getParentLand: importAs("Land_getParentLand") as (
+        Land_getParentLandID: importAs("Land_getParentLandID") as (
             id: LandID
         ) => LandID,
-        Land_getSubLands: importAs("Land_getSubLands") as (
+        Land_getSubLandIDs: importAs("Land_getSubLandIDs") as (
             id: LandID
         ) => LandID[],
         Land_getNestedLevel: importAs("Land_getNestedLevel") as (
             id: LandID
         ) => number,
-        Land_getRootLand: importAs("Land_getRootLand") as (
-            id: LandID
-        ) => LandID,
-
-        Land_getFamilyTree: importAs("Land_getFamilyTree") as (
-            id: LandID
-        ) => LandID[],
-        Land_getSelfAndAncestors: importAs("Land_getSelfAndAncestors") as (
-            id: LandID
-        ) => LandID[],
-        Land_getSelfAndDescendants: importAs("Land_getSelfAndDescendants") as (
-            id: LandID
-        ) => LandID[],
 
         Land_getPermType: importAs("Land_getPermType") as (
             id: LandID,
@@ -262,6 +237,7 @@ export class Land {
     };
 
     readonly mLandId: LandID = -1;
+
     constructor(id: LandID) {
         this.mLandId = id;
     }
@@ -276,14 +252,6 @@ export class Land {
             return new LandAABB(result[0], result[1]);
         }
         return null;
-    }
-
-    /**
-     *  修改领地AABB范围（仅限普通领地，且新范围没有任何重叠等冲突）
-     * @warning 修改后务必在 LandRegistry 中刷新领地范围
-     */
-    setAABB(aabb: LandAABB): boolean {
-        return Land.SYMBOLS.Land_setAABB(this.mLandId, [aabb.min, aabb.max]);
     }
 
     getTeleportPos(): IntPos {
@@ -322,6 +290,17 @@ export class Land {
         Land.SYMBOLS.Land_setOwner(this.mLandId, owner);
     }
 
+    /**
+     * @deprecated Use getOwner() instead, this returns raw storage string (may be XUID or UUID).
+     */
+    getRawOwner(): string | null {
+        const id = Land.SYMBOLS.Land_getRawOwner(this.mLandId);
+        if (id === "") {
+            return null;
+        }
+        return id;
+    }
+
     getMembers(): UUID[] {
         return Land.SYMBOLS.Land_getMembers(this.mLandId);
     }
@@ -340,14 +319,6 @@ export class Land {
 
     setName(name: string): void {
         Land.SYMBOLS.Land_setName(this.mLandId, name);
-    }
-
-    getDescribe(): string {
-        return Land.SYMBOLS.Land_getDescribe(this.mLandId);
-    }
-
-    setDescribe(describe: string): void {
-        Land.SYMBOLS.Land_setDescribe(this.mLandId, describe);
     }
 
     getOriginalBuyPrice(): number {
@@ -370,10 +341,16 @@ export class Land {
         return Land.SYMBOLS.Land_isMember(this.mLandId, uuid);
     }
 
+    /**
+     * @deprecated
+     */
     isConvertedLand(): boolean {
         return Land.SYMBOLS.Land_isConvertedLand(this.mLandId);
     }
 
+    /**
+     * @deprecated
+     */
     isOwnerDataIsXUID(): boolean {
         return Land.SYMBOLS.Land_isOwnerDataIsXUID(this.mLandId);
     }
@@ -403,7 +380,7 @@ export class Land {
      */
     getType(): LandType | null {
         const result = Land.SYMBOLS.Land_getType(this.mLandId);
-        if (result === -1) {
+        if (result === INVALID_LAND_ID) {
             return null;
         }
         return result as LandType;
@@ -462,8 +439,8 @@ export class Land {
     /**
      * @brief 获取父领地
      */
-    getParentLand(): Land | null {
-        const result = Land.SYMBOLS.Land_getParentLand(this.mLandId);
+    getParentLandID(): Land | null {
+        const result = Land.SYMBOLS.Land_getParentLandID(this.mLandId);
         if (result === -1) {
             return null;
         }
@@ -473,8 +450,8 @@ export class Land {
     /**
      * @brief 获取子领地(当前领地名下的所有子领地)
      */
-    getSubLands(): Land[] {
-        return Land.SYMBOLS.Land_getSubLands(this.mLandId).map(
+    getSubLandIDs(): Land[] {
+        return Land.SYMBOLS.Land_getSubLandIDs(this.mLandId).map(
             (id) => new Land(id)
         );
     }
@@ -484,44 +461,6 @@ export class Land {
      */
     getNestedLevel(): number {
         return Land.SYMBOLS.Land_getNestedLevel(this.mLandId);
-    }
-
-    /**
-     * @brief 获取根领地(即最顶层的普通领地 isOrdinaryLand() == true)
-     */
-    getRootLand(): Land | null {
-        const result = Land.SYMBOLS.Land_getRootLand(this.mLandId);
-        if (result === -1) {
-            return null;
-        }
-        return new Land(result);
-    }
-
-    /**
-     * @brief 获取从当前领地的根领地出发的所有子领地（包含根和当前领地）
-     */
-    getFamilyTree(): Land[] {
-        return Land.SYMBOLS.Land_getFamilyTree(this.mLandId).map(
-            (id) => new Land(id)
-        );
-    }
-
-    /**
-     * @brief 获取当前领地及其所有上级父领地（包含自身）
-     */
-    getSelfAndAncestors(): Land[] {
-        return Land.SYMBOLS.Land_getSelfAndAncestors(this.mLandId).map(
-            (id) => new Land(id)
-        );
-    }
-
-    /**
-     * @brief 获取当前领地及其所有下级子领地（包含自身）
-     */
-    getSelfAndDescendants(): Land[] {
-        return Land.SYMBOLS.Land_getSelfAndDescendants(this.mLandId).map(
-            (id) => new Land(id)
-        );
     }
 
     /**
