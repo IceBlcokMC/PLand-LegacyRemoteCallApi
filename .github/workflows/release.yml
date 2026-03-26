@@ -34,17 +34,13 @@ jobs:
         with:
           node-version: 20
 
-      - run: |
-          npm install -g typescript
-
-      - name: Build TypeScript to JavaScript Library
+      - name: Install dependencies
         run: |
-          git clone --depth=1 https://github.com/LiteLDev/LegacyScriptEngine_API.git
+          npm install
 
-          cd ./ts
-          tsc
-
-          cd ..
+      - name: Build TypeScript
+        run: |
+          npm run build
 
       - uses: actions/upload-artifact@v4
         with:
