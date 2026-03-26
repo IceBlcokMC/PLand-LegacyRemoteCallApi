@@ -1,9 +1,10 @@
 import {
-    importAs, INVALID_LAND_ID,
+    importSymbol, INVALID_LAND_ID,
     isIntPos,
     LandID,
     LandPermType,
     UUID,
+    InternalLandAABB
 } from "../ImportDef.js";
 import {LandAABB} from "./LandAABB.js";
 
@@ -29,7 +30,7 @@ export interface EnvironmentPerms {
 
 export interface RoleEntry {
     member: boolean;
-    guest: boolean;
+    actor: boolean;
 }
 
 export interface RolePerms {
@@ -83,6 +84,8 @@ export interface RolePerms {
     useBeeNest: RoleEntry;           // 使用蜂巢(蜂箱)
     editFlowerPot: RoleEntry;        // 编辑花盆
     allowUseRangedWeapon: RoleEntry; // 允许使用远程武器(弓/弩)
+
+    /**@version v0.19.x*/ allowTriggerDripleaf: RoleEntry; // 允许触发垂滴叶
 }
 
 export interface LandPermTable {
@@ -97,138 +100,179 @@ export enum LandType {
     Sub = 3, // 子领地(有父、无子)
 }
 
-type InternalLandAABB = [IntPos, IntPos];
+/**
+ * 领地持有类型
+ * @version v0.19.x
+ */
+export enum LandHoldType {
+    Bought = 0, // 购买模式
+    Leased = 1, // 租赁模式
+}
+
+/**
+ * 领地租赁状态
+ * @version v0.19.x
+ */
+export enum LeaseState {
+    None = 0, // 非租赁领地 / 无状态
+    Active = 1, // 正常期
+    Frozen = 2, // 冻结期
+    Expired = 3, // 已到期(已回收)
+}
 
 export class Land {
     static SYMBOLS = {
-        Land_getAABB: importAs("Land_getAABB") as (
+        Land_getAABB: importSymbol("Land_getAABB") as (
             id: LandID
         ) => InternalLandAABB,
 
-        Land_getTeleportPos: importAs("Land_getTeleportPos") as (
+        Land_getTeleportPos: importSymbol("Land_getTeleportPos") as (
             id: LandID
         ) => IntPos,
 
-        Land_setTeleportPos: importAs("Land_setTeleportPos") as (
+        Land_setTeleportPos: importSymbol("Land_setTeleportPos") as (
             id: LandID,
             pos: IntPos
         ) => void,
 
-        Land_getId: importAs("Land_getId") as (id: LandID) => LandID,
+        Land_getId: importSymbol("Land_getId") as (id: LandID) => LandID,
 
-        Land_getDimensionId: importAs("Land_getDimensionId") as (
+        Land_getDimensionId: importSymbol("Land_getDimensionId") as (
             id: LandID
         ) => number,
 
-        Land_getPermTable: importAs("Land_getPermTable") as (
+        Land_getPermTable: importSymbol("Land_getPermTable") as (
             id: LandID
         ) => string,
 
-        Land_setPermTable: importAs("Land_setPermTable") as (
+        Land_setPermTable: importSymbol("Land_setPermTable") as (
             id: LandID,
             table: string
         ) => void,
 
-        Land_getOwner: importAs("Land_getOwner") as (id: LandID) => UUID,
+        Land_getOwner: importSymbol("Land_getOwner") as (id: LandID) => UUID,
 
-        Land_setOwner: importAs("Land_setOwner") as (
+        Land_setOwner: importSymbol("Land_setOwner") as (
             id: LandID,
             owner: UUID
-        ) => void,
+        ) => boolean,
 
-        Land_getRawOwner: importAs("Land_getRawOwner") as (id: LandID) => string,
+        Land_getRawOwner: importSymbol("Land_getRawOwner") as (id: LandID) => string,
 
-        Land_getMembers: importAs("Land_getMembers") as (id: LandID) => UUID[],
+        Land_getMembers: importSymbol("Land_getMembers") as (id: LandID) => UUID[],
 
-        Land_addLandMember: importAs("Land_addLandMember") as (
+        Land_addLandMember: importSymbol("Land_addLandMember") as (
             id: LandID,
             uuid: UUID
-        ) => void,
+        ) => boolean,
 
-        Land_removeLandMember: importAs("Land_removeLandMember") as (
+        Land_removeLandMember: importSymbol("Land_removeLandMember") as (
             id: LandID,
             uuid: UUID
-        ) => void,
+        ) => boolean,
 
-        Land_getName: importAs("Land_getName") as (id: LandID) => string,
+        Land_getName: importSymbol("Land_getName") as (id: LandID) => string,
 
-        Land_setName: importAs("Land_setName") as (
+        Land_setName: importSymbol("Land_setName") as (
             id: LandID,
             name: string
         ) => void,
 
-        Land_getOriginalBuyPrice: importAs("Land_getOriginalBuyPrice") as (
+        Land_getOriginalBuyPrice: importSymbol("Land_getOriginalBuyPrice") as (
             id: LandID
         ) => number,
 
-        Land_setOriginalBuyPrice: importAs("Land_setOriginalBuyPrice") as (
+        Land_setOriginalBuyPrice: importSymbol("Land_setOriginalBuyPrice") as (
             id: LandID,
             price: number
         ) => void,
 
-        Land_is3D: importAs("Land_is3D") as (id: LandID) => boolean,
-        Land_isOwner: importAs("Land_isOwner") as (
+        Land_is3D: importSymbol("Land_is3D") as (id: LandID) => boolean,
+        Land_isOwner: importSymbol("Land_isOwner") as (
             id: LandID,
             uuid: UUID
         ) => boolean,
-        Land_isMember: importAs("Land_isMember") as (
+        Land_isMember: importSymbol("Land_isMember") as (
             id: LandID,
             uuid: UUID
         ) => boolean,
 
-        Land_isConvertedLand: importAs("Land_isConvertedLand") as (
+        Land_isConvertedLand: importSymbol("Land_isConvertedLand") as (
             id: LandID
         ) => boolean,
 
-        Land_isOwnerDataIsXUID: importAs("Land_isOwnerDataIsXUID") as (
+        Land_isOwnerDataIsXUID: importSymbol("Land_isOwnerDataIsXUID") as (
             id: LandID
         ) => boolean,
 
-        Land_isCollision: importAs("Land_isCollision") as (
+        Land_isCollision: importSymbol("Land_isCollision") as (
             id: LandID,
             pos: IntPos,
             radius: number
         ) => boolean,
 
-        Land_isCollision2: importAs("Land_isCollision2") as (
+        Land_isCollision2: importSymbol("Land_isCollision2") as (
             id: LandID,
             pos1: IntPos,
             pos2: IntPos
         ) => boolean,
 
-        Land_isDirty: importAs("Land_isDirty") as (id: LandID) => boolean,
-        Land_getType: importAs("Land_getType") as (id: LandID) => number,
+        Land_isDirty: importSymbol("Land_isDirty") as (id: LandID) => boolean,
+        Land_getType: importSymbol("Land_getType") as (id: LandID) => number,
 
-        Land_hasParentLand: importAs("Land_hasParentLand") as (
+        Land_hasParentLand: importSymbol("Land_hasParentLand") as (
             id: LandID
         ) => boolean,
-        Land_hasSubLand: importAs("Land_hasSubLand") as (id: LandID) => boolean,
-        Land_isSubLand: importAs("Land_isSubLand") as (id: LandID) => boolean,
-        Land_isParentLand: importAs("Land_isParentLand") as (
+        Land_hasSubLand: importSymbol("Land_hasSubLand") as (id: LandID) => boolean,
+        Land_isSubLand: importSymbol("Land_isSubLand") as (id: LandID) => boolean,
+        Land_isParentLand: importSymbol("Land_isParentLand") as (
             id: LandID
         ) => boolean,
-        Land_isMixLand: importAs("Land_isMixLand") as (id: LandID) => boolean,
-        Land_isOrdinaryLand: importAs("Land_isOrdinaryLand") as (
+        Land_isMixLand: importSymbol("Land_isMixLand") as (id: LandID) => boolean,
+        Land_isOrdinaryLand: importSymbol("Land_isOrdinaryLand") as (
             id: LandID
         ) => boolean,
-        Land_canCreateSubLand: importAs("Land_canCreateSubLand") as (
+        Land_canCreateSubLand: importSymbol("Land_canCreateSubLand") as (
             id: LandID
         ) => boolean,
 
-        Land_getParentLandID: importAs("Land_getParentLandID") as (
+        Land_getParentLandID: importSymbol("Land_getParentLandID") as (
             id: LandID
         ) => LandID,
-        Land_getSubLandIDs: importAs("Land_getSubLandIDs") as (
+        Land_getSubLandIDs: importSymbol("Land_getSubLandIDs") as (
             id: LandID
         ) => LandID[],
-        Land_getNestedLevel: importAs("Land_getNestedLevel") as (
+        Land_getNestedLevel: importSymbol("Land_getNestedLevel") as (
             id: LandID
         ) => number,
 
-        Land_getPermType: importAs("Land_getPermType") as (
+        Land_getPermType: importSymbol("Land_getPermType") as (
             id: LandID,
             uuid: UUID
         ) => number,
+
+        Land_isSystemOwned: importSymbol("Land_isSystemOwned") as (
+            id: LandID
+        ) => boolean,
+        Land_isBought: importSymbol("Land_isBought") as (
+            id: LandID
+        ) => boolean,
+        Land_isLeased: importSymbol("Land_isLeased") as (
+            id: LandID
+        ) => boolean,
+        Land_isLeaseActive: importSymbol("Land_isLeaseActive") as (
+            id: LandID
+        ) => boolean,
+        Land_isLeaseFrozen: importSymbol("Land_isLeaseFrozen") as (
+            id: LandID
+        ) => boolean,
+        Land_isLeaseExpired: importSymbol("Land_isLeaseExpired") as (
+            id: LandID
+        ) => boolean,
+        Land_getHoldType: importSymbol("Land_getHoldType") as (id: LandID) => LandHoldType,
+        Land_getLeaseState: importSymbol("Land_getLeaseState") as (id: LandID) => LeaseState,
+        Land_getLeaseStartAt: importSymbol("Land_getLeaseStartAt") as (id: LandID) => string,
+        Land_getLeaseEndAt: importSymbol("Land_getLeaseEndAt") as (id: LandID) => string,
     };
 
     readonly mLandId: LandID = -1;
@@ -236,6 +280,101 @@ export class Land {
     constructor(id: LandID) {
         this.mLandId = id;
     }
+
+    /**
+     * @brief 判断当前领地是否为系统所有
+     * @return true/false
+     * @version v0.19.x
+     */
+    isSystemOwned() {
+        return Land.SYMBOLS.Land_isSystemOwned(this.mLandId);
+    }
+
+    /**
+     * 领地是否为买断制领地
+     * @enum LandHoldType::Bought
+     * @version v0.19.x
+     */
+    isBought(): boolean {
+        return Land.SYMBOLS.Land_isBought(this.mLandId);
+    };
+
+    /**
+     * 检查是否已被租赁
+     * @enum LandHoldType::Leased
+     * @version v0.19.x
+     */
+    isLeased(): boolean {
+        return Land.SYMBOLS.Land_isLeased(this.mLandId);
+    };
+
+    /**
+     * 检查租赁是否有效
+     * @enum LeaseState::Active
+     * @version v0.19.x
+     */
+    isLeaseActive(): boolean {
+        return Land.SYMBOLS.Land_isLeaseActive(this.mLandId);
+    };
+
+    /**
+     * 检查租赁是否被冻结
+     * @enum LeaseState::Frozen
+     * @version v0.19.x
+     */
+    isLeaseFrozen(): boolean {
+        return Land.SYMBOLS.Land_isLeaseFrozen(this.mLandId);
+    };
+
+    /**
+     * 检查租赁是否已过期
+     * @enum LeaseState::Expired
+     * @version v0.19.x
+     */
+    isLeaseExpired(): boolean {
+        return Land.SYMBOLS.Land_isLeaseExpired(this.mLandId);
+    };
+
+    /**
+     * 获取领地持有类型
+     * @version v0.19.x
+     */
+    getHoldType() {
+        return Land.SYMBOLS.Land_getHoldType(this.mLandId);
+    }
+
+    /**
+     * 获取租赁状态
+     * @version v0.19.x
+     */
+    getLeaseState() {
+        return Land.SYMBOLS.Land_getLeaseState(this.mLandId);
+    }
+
+    /**
+     * 获取租赁开始时间
+     * @version v0.19.x
+     */
+    getLeaseStartAt(): Date | null {
+        const timestampStr = Land.SYMBOLS.Land_getLeaseStartAt(this.mLandId);
+        if (timestampStr.length == 0) {
+            return null; // 领地不存在
+        }
+        return new Date(Number(timestampStr) * 1000); // time_t 单位为秒, Date 单位为毫秒, 故乘以1000
+    }
+
+    /**
+     * 获取租赁结束时间
+     * @version v0.19.x
+     */
+    getLeaseEndAt(): Date | null {
+        const timestampStr = Land.SYMBOLS.Land_getLeaseEndAt(this.mLandId);
+        if (timestampStr.length == 0) {
+            return null; // 领地不存在
+        }
+        return new Date(Number(timestampStr) * 1000);
+    }
+
 
     /**
      * 获取领地AABB范围
@@ -281,8 +420,13 @@ export class Land {
         return Land.SYMBOLS.Land_getOwner(this.mLandId);
     }
 
-    setOwner(owner: UUID): void {
-        Land.SYMBOLS.Land_setOwner(this.mLandId, owner);
+    /**
+     * 修改领地主人
+     * @param owner 新的领地主人 UUID
+     * @note 如果UUID无效，此 API 返回 false
+     */
+    setOwner(owner: UUID): boolean {
+        return Land.SYMBOLS.Land_setOwner(this.mLandId, owner);
     }
 
     /**
@@ -300,12 +444,18 @@ export class Land {
         return Land.SYMBOLS.Land_getMembers(this.mLandId);
     }
 
-    addLandMember(uuid: UUID): void {
-        Land.SYMBOLS.Land_addLandMember(this.mLandId, uuid);
+    /**
+     * 添加领地成员
+     * @param uuid 要添加的领地成员 UUID
+     * @return 是否添加成功
+     * @note 此函数拒绝添加 Owner 为 Member
+     */
+    addLandMember(uuid: UUID): boolean {
+        return Land.SYMBOLS.Land_addLandMember(this.mLandId, uuid);
     }
 
-    removeLandMember(uuid: UUID): void {
-        Land.SYMBOLS.Land_removeLandMember(this.mLandId, uuid);
+    removeLandMember(uuid: UUID): boolean {
+        return Land.SYMBOLS.Land_removeLandMember(this.mLandId, uuid);
     }
 
     getName(): string {

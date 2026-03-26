@@ -1,24 +1,97 @@
 #include "pland/land/Land.h"
-#include "mc/platform/UUID.h"
 #include "pland/PLand.h"
 #include "pland/aabb/LandAABB.h"
 #include "pland/aabb/LandPos.h"
 #include "pland/land/repo/LandRegistry.h"
 #include "pland/utils/JsonUtil.h"
 
+#include "mc/platform/UUID.h"
 
-#include "exports/APIHelper.h"
-
-#include "ExportDef.h"
 #include <algorithm>
 #include <string>
 #include <vector>
+
+#include "exports/APIHelper.h"
+#include "ExportDef.h"
 
 namespace ldapi {
 
 
 void Export_Class_Land() {
     auto& registry = land::PLand::getInstance().getLandRegistry();
+
+    exportAs("Land_isSystemOwned", [&registry](int _landId) -> bool {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return false;
+        }
+        return land->isSystemOwned();
+    });
+    exportAs("Land_isBought", [&registry](int _landId) -> bool {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return false;
+        }
+        return land->isBought();
+    });
+    exportAs("Land_isLeased", [&registry](int _landId) -> bool {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return false;
+        }
+        return land->isLeased();
+    });
+    exportAs("Land_isLeaseActive", [&registry](int _landId) -> bool {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return false;
+        }
+        return land->isLeaseActive();
+    });
+    exportAs("Land_isLeaseFrozen", [&registry](int _landId) -> bool {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return false;
+        }
+        return land->isLeaseFrozen();
+    });
+    exportAs("Land_isLeaseExpired", [&registry](int _landId) -> bool {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return false;
+        }
+        return land->isLeaseExpired();
+    });
+    exportAs("Land_getHoldType", [&registry](int _landId) -> int {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return false;
+        }
+        return static_cast<int>(land->getHoldType());
+    });
+    exportAs("Land_getLeaseState", [&registry](int _landId) -> int {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return false;
+        }
+        return static_cast<int>(land->getLeaseState());
+    });
+    // 考虑到时间戳的长度，以及脚本传递安全性，使用 std::string 传输
+    exportAs("Land_getLeaseStartAt", [&registry](int _landId) -> std::string {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return "";
+        }
+        return std::to_string(land->getLeaseStartAt());
+    });
+    exportAs("Land_getLeaseEndAt", [&registry](int _landId) -> std::string {
+        auto land = registry.getLand(_landId);
+        if (!land) {
+            return "";
+        }
+        return std::to_string(land->getLeaseEndAt());
+    });
+
 
     exportAs("Land_getAABB", [&registry](int _landId) -> InternalLandAABB {
         auto land = registry.getLand(_landId);
@@ -84,15 +157,16 @@ void Export_Class_Land() {
         return land->getOwner().asString();
     });
 
-    exportAs("Land_setOwner", [&registry](int _landId, std::string const& owner) -> void {
+    exportAs("Land_setOwner", [&registry](int _landId, std::string const& owner) -> bool {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return;
+            return false;
         }
         if (!mce::UUID::canParse(owner)) {
-            return;
+            return false;
         }
         land->setOwner(mce::UUID{owner});
+        return true;
     });
 
     exportAs("Land_getRawOwner", [&registry](int _landId) -> std::string {
@@ -121,23 +195,23 @@ void Export_Class_Land() {
         return members;
     });
 
-    exportAs("Land_addLandMember", [&registry](int _landId, std::string const& member) -> void {
+    exportAs("Land_addLandMember", [&registry](int _landId, std::string const& member) -> bool {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return;
+            return false;
         }
         if (!mce::UUID::canParse(member)) {
-            return;
+            return false;
         }
-        land->addLandMember(mce::UUID{member});
+        return land->addLandMember(mce::UUID{member});
     });
 
-    exportAs("Land_removeLandMember", [&registry](int _landId, std::string const& member) -> void {
+    exportAs("Land_removeLandMember", [&registry](int _landId, std::string const& member) -> bool {
         auto land = registry.getLand(_landId);
         if (!land) {
-            return;
+            return false;
         }
-        land->removeLandMember(mce::UUID{member});
+        return land->removeLandMember(mce::UUID{member});
     });
 
     exportAs("Land_getName", [&registry](int _landId) -> std::string {

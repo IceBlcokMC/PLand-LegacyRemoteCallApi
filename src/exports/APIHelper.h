@@ -68,32 +68,60 @@ auto toCpp(Args&&... args) {
 }
 
 
-template <typename E>
-nlohmann::json asRPCResultVoid(E const& expected) {
-    nlohmann::json result = nlohmann::json::object();
+using FfiProtocol = std::string;
 
-    if (!expected) {
-        result["ok"]    = false;
-        result["error"] = expected.error().message();
-        return result;
-    }
-
-    result["ok"] = true;
-    return result;
+inline FfiProtocol ffi_error(std::string const& msg) {
+    auto payload     = nlohmann::json{};
+    payload["ok"]    = false;
+    payload["error"] = msg;
+    return payload.dump();
 }
-template <typename E, typename F>
-nlohmann::json asRPCResultWithValue(E const& expected, F&& onSuccess) {
-    nlohmann::json result = nlohmann::json::object();
+template <typename... Args>
+inline FfiProtocol ffi_error(std::string_view fmt, Args&&... args) {
+    return ffi_error(fmt::vformat(fmt, fmt::make_format_args(std::forward<Args>(args)...)));
+}
 
-    if (!expected) {
-        result["ok"]    = false;
-        result["error"] = expected.error().message();
-        return result;
+inline FfiProtocol ffi_success() {
+    auto payload  = nlohmann::json{};
+    payload["ok"] = true;
+    return payload.dump();
+}
+template <typename T>
+inline FfiProtocol ffi_success(T const& value) {
+    auto payload     = nlohmann::json{};
+    payload["ok"]    = true;
+    payload["value"] = value;
+    return payload.dump();
+}
+template <typename T, typename As>
+inline FfiProtocol ffi_success(T const& value, As&& as) {
+    return ffi_success(std::forward<As>(as)(value));
+}
+
+
+template <typename E>
+FfiProtocol as_ffi_protocol(E const& expected) {
+    if (expected) {
+        if constexpr (std::is_void_v<typename E::value_type>) {
+            return ffi_success(); // 无返回值 expected
+        } else {
+            return ffi_success(expected.value());
+        }
+    } else {
+        return ffi_error(expected.error().message());
     }
-
-    result["ok"]    = true;
-    result["value"] = std::forward<F>(onSuccess)();
-    return result;
+}
+template <typename E, typename As>
+FfiProtocol as_ffi_protocol(E const& expected, As&& as) {
+    if (expected) {
+        if constexpr (std::is_void_v<typename E::value_type>) {
+            return ffi_success(); // 无返回值 expected
+        } else {
+            return ffi_success(std::forward<E>(expected), std::forward<As>(as));
+        }
+    } else {
+        return ffi_error(expected.error().message());
+    }
 }
 
 

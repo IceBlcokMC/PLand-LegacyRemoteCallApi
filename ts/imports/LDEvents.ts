@@ -1,4 +1,15 @@
 import {ImportNamespace, LandID, UUID} from "../ImportDef.js";
+import {LeaseState} from "./Land.js";
+
+
+/**
+ * @version v0.19.x
+ */
+enum LandRecycleReason {
+    LeaseExpired = 0, // 租赁到期
+    Inactivity = 1, // 闲置
+    ForceRecycle = 2, // 强制回收
+};
 
 
 type EventParams = {
@@ -41,6 +52,17 @@ type EventParams = {
 
     PlayerTransferLandBeforeEvent: [player: Player, id: LandID, newOwner: UUID],
     PlayerTransferLandAfterEvent: [player: Player, id: LandID, newOwner: UUID],
+
+
+    // v0.19.x
+
+    LandRecycleEvent: [id: LandID, reason: LandRecycleReason],
+    LandStateChangedEvent: [id: LandID, oldState: LeaseState, newState: LeaseState],
+
+    MembersClearedEvent: [id: LandID],
+
+    PlayerLeaseLandEvent: [id: LandID, payMoney: number, days: number],
+    PlayerRenewLandEvent: [id: LandID, payMoney: number, days: number],
 };
 
 export type EventType = keyof EventParams;

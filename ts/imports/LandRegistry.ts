@@ -1,11 +1,11 @@
 import {
-    RPCResult,
+    FfiPayload,
     Expected,
-    importAs,
+    importSymbol,
     isIntPos,
     LandID,
     LandPermType,
-    UUID,
+    UUID, InternalLandAABB, FfiProtocol, asExpected,
 } from "../ImportDef.js";
 import {LandAABB} from "./LandAABB.js";
 import {Land} from "./Land.js";
@@ -20,36 +20,50 @@ export type PlayerSettings = {
 
 export class LandRegistry {
     static IMPORTS = {
-        LandRegistry_isOperator: importAs("LandRegistry_isOperator"),
-        LandRegistry_addOperator: importAs("LandRegistry_addOperator"),
-        LandRegistry_removeOperator: importAs("LandRegistry_removeOperator"),
-        LandRegistry_getOperators: importAs("LandRegistry_getOperators") as () => UUID[],
-        LandRegistry_getOrCreatePlayerSettings: importAs(
+        LandRegistry_isOperator: importSymbol("LandRegistry_isOperator"),
+        LandRegistry_addOperator: importSymbol("LandRegistry_addOperator"),
+        LandRegistry_removeOperator: importSymbol("LandRegistry_removeOperator"),
+        LandRegistry_getOperators: importSymbol("LandRegistry_getOperators") as () => UUID[],
+        LandRegistry_getOrCreatePlayerSettings: importSymbol(
             "LandRegistry_getOrCreatePlayerSettings",
         ),
-        LandRegistry_getLand: importAs("LandRegistry_getLand"),
-        LandRegistry_hasLand: importAs("LandRegistry_hasLand"),
-        LandRegistry_getLands: importAs("LandRegistry_getLands"),
-        LandRegistry_getLands1: importAs("LandRegistry_getLands1"),
-        LandRegistry_getLands2: importAs("LandRegistry_getLands2"),
-        LandRegistry_getLands3: importAs("LandRegistry_getLands3"),
-        LandRegistry_getLands4: importAs("LandRegistry_getLands4"),
-        LandRegistry_getPermType: importAs("LandRegistry_getPermType"),
-        LandRegistry_getLandAt: importAs("LandRegistry_getLandAt"),
-        LandRegistry_getLandAt1: importAs("LandRegistry_getLandAt1"),
-        LandRegistry_getLandAt2: importAs("LandRegistry_getLandAt2"),
-        LandRegistry_refreshLandRange: importAs(
+        LandRegistry_getLand: importSymbol("LandRegistry_getLand"),
+        LandRegistry_hasLand: importSymbol("LandRegistry_hasLand"),
+        LandRegistry_getLands: importSymbol("LandRegistry_getLands"),
+        LandRegistry_getLands1: importSymbol("LandRegistry_getLands1"),
+        LandRegistry_getLands2: importSymbol("LandRegistry_getLands2"),
+        LandRegistry_getLands3: importSymbol("LandRegistry_getLands3"),
+        LandRegistry_getLands4: importSymbol("LandRegistry_getLands4"),
+        LandRegistry_getPermType: importSymbol("LandRegistry_getPermType"),
+        LandRegistry_getLandAt: importSymbol("LandRegistry_getLandAt"),
+        LandRegistry_getLandAt1: importSymbol("LandRegistry_getLandAt1"),
+        LandRegistry_getLandAt2: importSymbol("LandRegistry_getLandAt2"),
+        LandRegistry_refreshLandRange: importSymbol(
             "LandRegistry_refreshLandRange",
         ),
-        PLand_getVersionMeta: importAs("PLand_getVersionMeta"),
-        LandRegistry_removeOrdinaryLand: importAs(
+        PLand_getVersionMeta: importSymbol("PLand_getVersionMeta"),
+        LandRegistry_removeOrdinaryLand: importSymbol(
             "LandRegistry_removeOrdinaryLand",
-        ),
-        LandRegistry_addOrdinaryLand: importAs("LandRegistry_addOrdinaryLand"),
+        ) as (id: LandID) => FfiProtocol,
+        LandRegistry_addOrdinaryLand: importSymbol("LandRegistry_addOrdinaryLand") as (aabb: InternalLandAABB, is3D: boolean, owner: UUID) => FfiProtocol,
+
+        LandRegistry_createSnapshot: importSymbol("LandRegistry_createSnapshot") as (dirName?: string) => void,
     };
 
     constructor() {
         throw new Error("LandRegistry is a static class");
+    }
+
+    /**
+     * 创建数据库快照
+     * @param dirName 快照文件夹名称，如果为空，则使用当前时间戳
+     * @note 创建的快照会被写入磁盘, snapshots/<dirName ?? timestamp>
+     * @note 此任务为异步任务，如果任务未完成，文件夹下会存在 .incomplete 文件
+     * @version v0.19.x
+     */
+    static createSnapshot(dirName?: string): void {
+        // LegacyRemoteCall 不支持 optional，这里采用空字符串 = null、undefined
+        return LandRegistry.IMPORTS.LandRegistry_createSnapshot(dirName ?? "");
     }
 
     static isOperator(uuid: string): boolean {
@@ -98,14 +112,12 @@ export class LandRegistry {
         if (aabb.min.dimid != aabb.max.dimid) {
             throw new Error("AABB min and max must be in the same dimension");
         }
-        const result = LandRegistry.IMPORTS.LandRegistry_addOrdinaryLand(
+        const protocol = LandRegistry.IMPORTS.LandRegistry_addOrdinaryLand(
             [aabb.min, aabb.max],
             is3D,
             owner,
-        ) as RPCResult<LandID>;
-        return new Expected(
-            result
-        ).map(id => new Land(id));
+        );
+        return asExpected<LandID>(protocol).map(id => new Land(id));
     }
 
     /**
@@ -119,8 +131,8 @@ export class LandRegistry {
                 ? land
                 :
                 (land as Land).mLandId;
-        const res = LandRegistry.IMPORTS.LandRegistry_removeOrdinaryLand(id) as RPCResult<void>;
-        return new Expected(res);
+        const protocol = LandRegistry.IMPORTS.LandRegistry_removeOrdinaryLand(id);
+        return asExpected<void>(protocol);
     }
 
     static getLand(landID: LandID): Land | null {

@@ -1,21 +1,46 @@
-// 导入定义
-
 const ExportNamespace = "PLand_LDAPI"; // ExportDef.h
 export const ImportNamespace = ExportNamespace;
 
-export type LandID = number;
-export type UUID = string;
+export type LandID = number; // int64_t as number
+export type UUID = string; // mce::UUID as string
 
 export const INVALID_LAND_ID: LandID = -1;
 
+/**
+ * 领地系统账号
+ * @version v0.19.x
+ */
+export const SYSTEM_ACCOUNT_UUID_STR: UUID = "deadbeef-dead-beef-dead-beefdeadbeef";
+
 export enum LandPermType {
-    Operator = 0, // 领地操作员（管理）
-    Owner = 1, // 领地主人
-    Member = 2, // 领地成员
-    Guest = 3, // 访客
+    /**
+     * 领地管理员
+     * @version v0.19.x
+     */
+    Admin = 0,
+
+    /**
+     * 领地主人
+     */
+    Owner = 1,
+
+    /**
+     * 领地成员
+     */
+    Member = 2,
+
+    /**
+     * 实体
+     * Actor includes both non-member players and non-player entities (e.g., Mobs, TNT).
+     * @version v0.19.x
+     */
+    Actor = 3,
+
+    /** @deprecated */ Operator = 0, // 领地操作员（管理）
+    /** @deprecated */ Guest = 3, // 访客
 }
 
-export function importAs(symbol: string): (...args: any[]) => any {
+export function importSymbol(symbol: string): (...args: any[]) => any {
     return ll.imports(ImportNamespace, symbol);
 }
 
@@ -27,41 +52,54 @@ export function isIntPos(obj: any): obj is IntPos {
     return obj instanceof IntPos;
 }
 
-export type RPCSuccess<T> =
+
+export type InternalLandAABB = [min: IntPos, max: IntPos];
+
+
+// ffi
+
+export type FfiProtocol = string; // JSON
+
+export type FfiSuccess<T> =
     T extends void
-        ? { ok: true }
-        : { ok: true; value: T };
+        ? { ok: true } // void
+        : { ok: true; value: T }; // T
 
-export type RPCFailure = { ok: false; error: string };
+export type FfiFailure = { ok: false; error: string };
 
-export type RPCResult<T> = RPCSuccess<T> | RPCFailure;
+export type FfiPayload<T> = FfiSuccess<T> | FfiFailure;
+
+export function asExpected<T>(protocol: FfiProtocol): Expected<T> {
+    const payload = JSON.parse(protocol) as FfiPayload<T>;
+    return new Expected<T>(payload);
+}
 
 export class Expected<T> {
-    private result: RPCResult<T>;
+    private payload: FfiPayload<T>;
 
-    constructor(res: RPCResult<T>) {
-        this.result = res;
+    constructor(res: FfiPayload<T>) {
+        this.payload = res;
     }
 
     isOk(): boolean {
-        return this.result.ok;
+        return this.payload.ok;
     }
 
     hasValue(): boolean {
-        return "value" in this.result;
+        return "value" in this.payload;
     }
 
     hasError(): boolean {
-        return "error" in this.result;
+        return "error" in this.payload;
     }
 
     unwrap(): T {
-        if (!this.result.ok) {
-            throw new Error(this.result.error);
+        if (!this.payload.ok) {
+            throw new Error(this.payload.error);
         }
 
-        if ("value" in this.result) {
-            return this.result.value;
+        if ("value" in this.payload) {
+            return this.payload.value;
         }
 
         return undefined as T;
@@ -75,24 +113,24 @@ export class Expected<T> {
     }
 
     map<U>(this: Expected<Exclude<T, void>>, func: (value: T) => U): Expected<U> {
-        if (!this.result.ok) {
-            return new Expected<U>(this.result as any);
+        if (!this.payload.ok) {
+            return new Expected<U>(this.payload as any);
         }
 
-        if (!("value" in this.result)) {
+        if (!("value" in this.payload)) {
             // T = void
             return new Expected<U>({
                 ok: true,
                 value: func(undefined as T)
-            } as RPCSuccess<U>);
+            } as FfiSuccess<U>);
         }
 
         try {
-            const newValue = func(this.result.value);
+            const newValue = func(this.payload.value);
             return new Expected<U>({
                 ok: true,
                 value: newValue
-            } as RPCSuccess<U>);
+            } as FfiSuccess<U>);
         } catch (e: any) {
             return new Expected<U>({
                 ok: false,

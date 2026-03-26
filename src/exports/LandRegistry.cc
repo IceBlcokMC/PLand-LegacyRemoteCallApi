@@ -20,6 +20,12 @@ namespace ldapi {
 
 
 void Export_Class_LandRegistry() {
+    exportAs("LandRegistry_createSnapshot", [](std::string const& dirName) -> void {
+        std::optional<std::string> finalName{std::nullopt};
+        if (!dirName.empty()) finalName = dirName;
+        land::PLand::getInstance().getLandRegistry().createSnapshot(finalName);
+    });
+
     exportAs("LandRegistry_isOperator", [](std::string const& uuid) -> bool {
         if (!mce::UUID::canParse(uuid)) {
             return false;
@@ -66,12 +72,12 @@ void Export_Class_LandRegistry() {
 
     exportAs(
         "LandRegistry_addOrdinaryLand",
-        [](InternalLandAABB iaabb, bool is3D, std::string const& owner) -> std::string {
+        [](InternalLandAABB iaabb, bool is3D, std::string const& owner) -> FfiProtocol {
             if (iaabb[0].second != iaabb[1].second) {
-                throw std::runtime_error("LandRegistry_addOrdinaryLand: Invalid AABB");
+                return ffi_error("LandRegistry_addOrdinaryLand: Invalid AABB, different dimensions");
             }
             if (!mce::UUID::canParse(owner)) {
-                throw std::runtime_error("LandRegistry_addOrdinaryLand: Invalid owner");
+                return ffi_error("LandRegistry_addOrdinaryLand: Invalid owner");
             }
             auto dimId = iaabb[0].second;
             auto aabb  = toCpp<land::LandAABB>(iaabb);
@@ -79,7 +85,7 @@ void Export_Class_LandRegistry() {
 
             auto land     = land::Land::make(aabb, dimId, is3D, mce::UUID{owner});
             auto expected = land::PLand::getInstance().getLandRegistry().addOrdinaryLand(land);
-            return asRPCResultWithValue(expected, [land]() { return land->getId(); });
+            return as_ffi_protocol(expected, [land](auto&) { return land->getId(); });
         }
     );
 
@@ -89,10 +95,10 @@ void Export_Class_LandRegistry() {
         return land->getId();
     });
 
-    exportAs("LandRegistry_removeOrdinaryLand", [](int id) -> int {
+    exportAs("LandRegistry_removeOrdinaryLand", [](int id) -> FfiProtocol {
         auto ptr    = land::PLand::getInstance().getLandRegistry().getLand(id);
         auto result = land::PLand::getInstance().getLandRegistry().removeOrdinaryLand(ptr);
-        return asRPCResultVoid(result);
+        return as_ffi_protocol(result);
     });
 
     using LandList = std::vector<land::LandID>;
