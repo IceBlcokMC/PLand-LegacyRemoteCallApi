@@ -8,7 +8,7 @@ add_repositories("iceblcokmc https://github.com/IceBlcokMC/xmake-repo.git")
 -- please note that you should add bdslibrary yourself if using dev version
 add_requires("levilamina 1.9.5", {configs = {target_type = "server"}})
 add_requires("levibuildscript")
-add_requires("legacyremotecall 0.10.0")
+add_requires("legacyremotecall 0.17.2")
 
 add_requires("pland 0.19.0-beta.1")
 
