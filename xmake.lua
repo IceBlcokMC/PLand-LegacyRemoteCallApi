@@ -40,3 +40,7 @@ target("PLand-LegacyRemoteCallApi") -- Change this to your mod name.
     set_languages("c++20")
     set_symbols("debug")
     add_defines("LL_PLAT_S")
+
+    if is_mode("debug") then
+        add_defines("LDAPI_COLLECT_EXPORT_SYMBOLS")
+    end

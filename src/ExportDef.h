@@ -14,8 +14,6 @@ using FloatPos = std::pair<Vec3, int>;     // pos, dimid
 
 constexpr auto ExportNamespace = "PLand_LDAPI";
 
-#define LDAPI_COLLECT_EXPORT_SYMBOLS
-
 template <typename CB>
 inline bool exportAs(std::string const& sym, CB&& callback) {
 #ifdef LDAPI_COLLECT_EXPORT_SYMBOLS
