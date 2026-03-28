@@ -21,20 +21,17 @@ MyMod& MyMod::getInstance() {
     static MyMod instance;
     return instance;
 }
-bool MyMod::load() {
+bool MyMod::load() { return true; }
 
+bool MyMod::enable() {
+
+    // 由于 PLand 资源初始化顺序问题，API 需要在 enable 时导出，避免空指针访问
     ldapi::Export_Class_LandRegistry();
     ldapi::Export_Class_LandAABB();
     ldapi::Export_Class_Land();
     ldapi::Export_LDEvents();
     ldapi::export_LeasingService();
 
-    return true;
-}
-
-bool MyMod::enable() {
-    getSelf().getLogger().debug("Enabling...");
-    // Code for enabling the mod goes here.
     return true;
 }
 
