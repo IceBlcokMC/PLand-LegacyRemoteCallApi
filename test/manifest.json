@@ -1,5 +1,5 @@
 {
-    "entry": "Test.js",
+    "entry": "bootstraps.js",
     "name": "test",
     "type": "lse-quickjs",
     "dependencies": [

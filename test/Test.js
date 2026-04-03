@@ -1,9 +1,9 @@
-/// <reference types="../PLand-LegacyRemoteCallApi/lib/esm/imports/LandRegistry.d.ts" />
+/// <reference types="../bin/PLand-LegacyRemoteCallApi/lib/esm/imports/LandRegistry.d.ts" />
 
 // "D:\MinecraftServer\1.21.132.3\plugins\PLand-LegacyRemoteCallApi\lib\esm\imports\LandRegistry.js"
-import {LandRegistry} from "./plugins/PLand-LegacyRemoteCallApi/lib/esm/imports/LandRegistry.js";
-import {Land} from "./plugins/PLand-LegacyRemoteCallApi/lib/esm/imports/Land.js";
-
+import {LandRegistry} from "../PLand-LegacyRemoteCallApi/lib/esm/imports/LandRegistry.js";
+import {Land} from "../PLand-LegacyRemoteCallApi/lib/esm/imports/Land.js";
+import {LDEvent} from "../PLand-LegacyRemoteCallApi/lib/esm/imports/LDEvents.js"
 
 /**
  * 由于 PLand 内部资源初始化顺序问题，对脚本的 LRCA 导出会在 PLand 初始化后导出
@@ -11,6 +11,10 @@ import {Land} from "./plugins/PLand-LegacyRemoteCallApi/lib/esm/imports/Land.js"
  */
 
 mc.listen("onServerStarted", () => {
+    // 注册事件监听器
+    // 注意: LDEvent 级所有相关API，在 onLoad 阶段调用会报错，因为此时API还未导出，PLand 未初始化完成
+    setupListeners();
+
     logger.info(`typeof LandRegistry: ${typeof LandRegistry}`)
     logger.info(`typeof LandRegistry.getLand: ${typeof LandRegistry.getLand}`)
 
@@ -25,3 +29,9 @@ mc.listen("onServerStarted", () => {
     logger.info(`new Land(2).getLeaseState() => ${new Land(2).getLeaseState()}`)
     logger.info(`new Land(2).getLeaseEndAt() => ${new Land(2).getLeaseEndAt().toString()}`)
 })
+
+function setupListeners() {
+    LDEvent.listen("PlayerEnterLandEvent", (pl, id) => {
+        logger.info(`PlayerEnterLandEvent: ${pl.name} enter ${id}`)
+    });
+}
