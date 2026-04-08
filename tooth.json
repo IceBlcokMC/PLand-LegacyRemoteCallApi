@@ -2,7 +2,7 @@
     "format_version": 3,
     "format_uuid": "289f771f-2c9a-4d73-9f3f-8492495a955d",
     "tooth": "github.com/engsr6982/PLand-LegacyRemoteCallApi",
-    "version": "0.19.0-beta.3",
+    "version": "0.20.0",
     "info": {
         "name": "PLand-LegacyRemoteCallApi",
         "description": "LegacyRemoteCallApi for PLand",
@@ -18,8 +18,8 @@
         {
             "platform": "win-x64",
             "dependencies": {
-                "github.com/LiteLDev/LeviLamina": "1.9.*",
-                "github.com/engsr6982/PLand": "0.19.*"
+                "github.com/LiteLDev/LeviLamina": "26.10.*",
+                "github.com/engsr6982/PLand": "0.20.*"
             },
             "assets": [
                 {
