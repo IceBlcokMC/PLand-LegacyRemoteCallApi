@@ -205,7 +205,7 @@ void Export_Class_LandRegistry() {
     });
 
     exportAs("PLand_getVersionMeta", []() -> std::string {
-        static struct {
+        static struct MetaInfo {
             std::string Commit = land::BuildInfo::Commit.data();
             std::string Branch = land::BuildInfo::Branch.data();
             std::string Tag    = land::BuildInfo::Tag.data();
