@@ -205,12 +205,13 @@ void Export_Class_LandRegistry() {
     });
 
     exportAs("PLand_getVersionMeta", []() -> std::string {
-        static struct MetaInfo {
-            std::string Commit = land::BuildInfo::Commit.data();
-            std::string Branch = land::BuildInfo::Branch.data();
-            std::string Tag    = land::BuildInfo::Tag.data();
-        } meta;
-        static auto res = land::json_util::struct2json(meta).dump();
+        static std::string res = []{
+            nlohmann::json j;
+            j["Commit"] = land::BuildInfo::Commit.data();
+            j["Branch"] = land::BuildInfo::Branch.data();
+            j["Tag"]    = land::BuildInfo::Tag.data();
+            return j.dump();
+        }();
         return res;
     });
 }
