@@ -10,7 +10,7 @@ add_requires("levilamina 26.20.0", {configs = {target_type = "server"}})
 add_requires("levibuildscript")
 add_requires("legacyremotecall 0.19.0")
 
-add_requires("pland develop")
+add_requires("pland 0.21.0")
 
 if not has_config("vs_runtime") then
     set_runtimes("MD")
