@@ -1,5 +1,10 @@
 # PLand-LegacyRemoteCallApi
 
+> [!IMPORTANT]
+> 由于维护成本以及API便利性上考虑，此项目将停止维护  
+> 对于使用 PLand v0.21.0 以上的开发者，请使用 [PLand-NAPI](https://github.com/IceBlcokMC/PLand-NAPI) 进行附属开发  
+> [PLand-NAPI](https://github.com/IceBlcokMC/PLand-NAPI) 提供更强大的绑定和更多的交互接口以及更好的性能，让您的脚本可以更方便的与领地进行跨语言交互
+
 PLand 的 LegacyRemoteCallApi 实现，用于在 LegacyScriptEngine-QuickJs/NodeJs 中调用 PLand 的 API。
 
 > **注意：**  
