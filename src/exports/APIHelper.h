@@ -5,6 +5,8 @@
 #include "pland/utils/JsonUtil.h"
 #include <pland/land/repo/LandContext.h>
 
+#include "pland/BuildInfo.h"
+
 #include "ExportDef.h"
 
 
@@ -36,7 +38,7 @@ struct Converter<land::LandAABB> {
 template <>
 struct Converter<land::LandPos> {
     static IntPos        toLSE(land::LandPos const& pos, land::LandDimid dimid) { return IntPos{pos.as(), dimid}; }
-    static land::LandPos toCpp(IntPos const& inner) { return land::LandPos::make(inner.first); }
+    static land::LandPos toCpp(IntPos inner) { return land::LandPos::make(inner.first); }
 };
 
 
@@ -44,13 +46,22 @@ struct Converter<land::LandPos> {
 template <>
 struct Converter<land::LandPermTable> {
     static std::string toLSE(land::LandPermTable const& table) {
-        auto j = land::json_util::struct2json(table);
+#ifndef PLAND_BUILD_MODE
+        auto j = land::json_util::struct2json(table); // <= v0.21.x
+#else
+        auto j = land::json_util::struct_to_json(table); // >= v0.22.x
+#endif
         return j.dump();
     }
     static land::LandPermTable toCpp(std::string const& json) {
         auto                j = nlohmann::json::parse(json);
         land::LandPermTable table{};
-        land::json_util::json2structWithDiffPatch(j, table);
+#ifndef PLAND_BUILD_MODE
+        land::json_util::json2structWithDiffPatch(j, table); // <= v0.21.x
+#else
+        land::json_util::merge_and_deserialize(j, table); // >= v0.22.x
+#endif
+
         return table;
     }
 };

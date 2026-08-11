@@ -48,7 +48,7 @@ void Export_Class_LandRegistry() {
     });
 
     exportAs("LandRegistry_getOperators", []() -> std::vector<std::string> {
-        auto& ops = land::PLand::getInstance().getLandRegistry().getOperators();
+        auto ops = land::PLand::getInstance().getLandRegistry().getOperators();
         return std::vector<std::string>{ops.begin(), ops.end()};
     });
 
@@ -59,7 +59,12 @@ void Export_Class_LandRegistry() {
         try {
             // struct -> json -> std::string
             auto& settings = land::PLand::getInstance().getLandRegistry().getOrCreatePlayerSettings(mce::UUID{uuid});
-            auto  j        = land::json_util::struct2json(settings);
+
+#ifndef PLAND_BUILD_MODE
+            auto j = land::json_util::struct2json(settings); // <= v0.21.x
+#else
+            auto j = land::json_util::struct_to_json(settings); // >= v0.22.x
+#endif
             return j.dump();
         } catch (...) {
             return {};
@@ -172,13 +177,13 @@ void Export_Class_LandRegistry() {
                                     .getPermType(mce::UUID{uuid}, static_cast<land::LandID>(landID), includeOperator));
     });
 
-    exportAs("LandRegistry_getLandAt", [](IntPos const& pos) -> int {
+    exportAs("LandRegistry_getLandAt", [](IntPos pos) -> int {
         auto land = land::PLand::getInstance().getLandRegistry().getLandAt(pos.first, pos.second);
         if (!land) return -1;
         return land->getId();
     });
 
-    exportAs("LandRegistry_getLandAt1", [](IntPos const& pos, int radius) -> LandList {
+    exportAs("LandRegistry_getLandAt1", [](IntPos pos, int radius) -> LandList {
         auto     lands = land::PLand::getInstance().getLandRegistry().getLandAt(pos.first, radius, pos.second);
         LandList result;
         result.reserve(lands.size());
@@ -188,7 +193,7 @@ void Export_Class_LandRegistry() {
         return result;
     });
 
-    exportAs("LandRegistry_getLandAt2", [](IntPos const& a, IntPos const& b) -> LandList {
+    exportAs("LandRegistry_getLandAt2", [](IntPos a, IntPos b) -> LandList {
         auto     lands = land::PLand::getInstance().getLandRegistry().getLandAt(a.first, b.first, a.second);
         LandList result;
         result.reserve(lands.size());
@@ -205,7 +210,7 @@ void Export_Class_LandRegistry() {
     });
 
     exportAs("PLand_getVersionMeta", []() -> std::string {
-        static std::string res = []{
+        static std::string res = [] {
             nlohmann::json j;
             j["Commit"] = land::BuildInfo::Commit.data();
             j["Branch"] = land::BuildInfo::Branch.data();

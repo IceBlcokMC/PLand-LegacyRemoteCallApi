@@ -11,8 +11,9 @@
 #include <string>
 #include <vector>
 
-#include "exports/APIHelper.h"
 #include "ExportDef.h"
+#include "exports/APIHelper.h"
+
 
 namespace ldapi {
 
@@ -109,7 +110,7 @@ void Export_Class_Land() {
         return toLSE<land::LandPos>(land->getTeleportPos(), land->getDimensionId());
     });
 
-    exportAs("Land_setTeleportPos", [&registry](int _landId, IntPos const& pos) -> void {
+    exportAs("Land_setTeleportPos", [&registry](int _landId, IntPos pos) -> void {
         auto land = registry.getLand(_landId);
         if (!land) {
             return;
@@ -292,7 +293,7 @@ void Export_Class_Land() {
         return land->isOwnerDataIsXUID();
     });
 
-    exportAs("Land_isCollision", [&registry](int _landId, IntPos const& pos, int radius) -> bool {
+    exportAs("Land_isCollision", [&registry](int _landId, IntPos pos, int radius) -> bool {
         auto land = registry.getLand(_landId);
         if (!land) {
             return false;
@@ -300,7 +301,7 @@ void Export_Class_Land() {
         return land->isCollision(toCpp<land::LandPos>(pos).as(), radius);
     });
 
-    exportAs("Land_isCollision2", [&registry](int _landId, IntPos const& a, IntPos const& b) -> bool {
+    exportAs("Land_isCollision2", [&registry](int _landId, IntPos a, IntPos b) -> bool {
         auto land = registry.getLand(_landId);
         if (!land) {
             return false;
