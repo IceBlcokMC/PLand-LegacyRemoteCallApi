@@ -32,7 +32,7 @@ void export_LeasingService() {
         }
         return ffi_error("land [{}] not found", landId);
     });
-    exportAs("LeasingService_setStartAt", [service, registry](int landId, std::string const& timestamp) -> FfiProtocol {
+    exportAs("LeasingService_setEndAt", [service, registry](int landId, std::string const& timestamp) -> FfiProtocol {
         if (auto land = registry->getLand(landId)) {
             auto ts = land::time_utils::parseTime(timestamp);
             if (ts == std::chrono::system_clock::time_point{}) {

@@ -51,4 +51,5 @@ target("PLand-LegacyRemoteCallApi") -- Change this to your mod name.
 
     if is_mode("debug") then
         add_defines("LDAPI_COLLECT_EXPORT_SYMBOLS")
+        add_defines("LDAPI_DEBUG")
     end
