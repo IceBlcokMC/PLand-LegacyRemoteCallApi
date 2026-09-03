@@ -1,23 +1,21 @@
-import {ImportNamespace, LandID, UUID} from "../ImportDef.js";
-import {LeaseState} from "./Land.js";
-
+import { ImportNamespace, LandID, UUID } from "../ImportDef.js";
+import { LeaseState } from "./Land.js";
 
 /**
- * @version v0.19.x
+ * @version v0.19.0+
  */
 enum LandRecycleReason {
     LeaseExpired = 0, // 租赁到期
     Inactivity = 1, // 闲置
     ForceRecycle = 2, // 强制回收
-};
-
+}
 
 type EventParams = {
-    LandResizedEvent: [id: LandID, min: IntPos, max: IntPos],
-    MemberChangedEvent: [id: LandID, target: UUID, isAdd: boolean],
-    OwnerChangedEvent: [id: LandID, oldOwner: UUID, newOwner: UUID]
+    LandResizedEvent: [id: LandID, min: IntPos, max: IntPos];
+    MemberChangedEvent: [id: LandID, target: UUID, isAdd: boolean];
+    OwnerChangedEvent: [id: LandID, oldOwner: UUID, newOwner: UUID];
 
-    LandRefundFailedEvent: [id: LandID, target: UUID, amount: number],
+    LandRefundFailedEvent: [id: LandID, target: UUID, amount: number];
 
     /**
      * player 操作玩家
@@ -27,42 +25,86 @@ type EventParams = {
      * newTotalPrice 新范围总价           -----|----> LandResizeSettlement
      * amount 差价（始终为正）            -----/
      */
-    PlayerApplyLandRangeChangeBeforeEvent: [player: Player, id: LandID, min: IntPos, max: IntPos, type: "NoChange" | "Pay" | "Refund", newTotalPrice: number, amount: number]
-    PlayerApplyLandRangeChangeAfterEvent: [player: Player, id: LandID, min: IntPos, max: IntPos, type: "NoChange" | "Pay" | "Refund", newTotalPrice: number, amount: number]
+    PlayerApplyLandRangeChangeBeforeEvent: [
+        player: Player,
+        id: LandID,
+        min: IntPos,
+        max: IntPos,
+        type: "NoChange" | "Pay" | "Refund",
+        newTotalPrice: number,
+        amount: number,
+    ];
+    PlayerApplyLandRangeChangeAfterEvent: [
+        player: Player,
+        id: LandID,
+        min: IntPos,
+        max: IntPos,
+        type: "NoChange" | "Pay" | "Refund",
+        newTotalPrice: number,
+        amount: number,
+    ];
 
-    PlayerBuyLandBeforeEvent: [player: Player, payMoney: number, landType: "Ordinary" | "Parent" | "Mix" | "Sub"]
-    PlayerBuyLandAfterEvent: [player: Player, id: LandID, payMoney: number]
+    PlayerBuyLandBeforeEvent: [
+        player: Player,
+        payMoney: number,
+        landType: "Ordinary" | "Parent" | "Mix" | "Sub",
+    ];
+    PlayerBuyLandAfterEvent: [player: Player, id: LandID, payMoney: number];
 
-    PlayerChangeLandMemberBeforeEvent: [player: Player, id: LandID, target: UUID, isAdd: boolean]
-    PlayerChangeLandMemberAfterEvent: [player: Player, id: LandID, target: UUID, isAdd: boolean]
+    PlayerChangeLandMemberBeforeEvent: [
+        player: Player,
+        id: LandID,
+        target: UUID,
+        isAdd: boolean,
+    ];
+    PlayerChangeLandMemberAfterEvent: [
+        player: Player,
+        id: LandID,
+        target: UUID,
+        isAdd: boolean,
+    ];
 
-    PlayerChangeLandNameBeforeEvent: [player: Player, id: LandID, newName: string]
-    PlayerChangeLandNameAfterEvent: [player: Player, id: LandID, newName: string]
+    PlayerChangeLandNameBeforeEvent: [
+        player: Player,
+        id: LandID,
+        newName: string,
+    ];
+    PlayerChangeLandNameAfterEvent: [
+        player: Player,
+        id: LandID,
+        newName: string,
+    ];
 
-    PlayerDeleteLandBeforeEvent: [player: Player, id: LandID]
-    PlayerDeleteLandAfterEvent: [player: Player, id: LandID]
+    PlayerDeleteLandBeforeEvent: [player: Player, id: LandID];
+    PlayerDeleteLandAfterEvent: [player: Player, id: LandID];
 
-    PlayerEnterLandEvent: [player: Player, id: LandID]
-    PlayerLeaveLandEvent: [player: Player, id: LandID]
+    PlayerEnterLandEvent: [player: Player, id: LandID];
+    PlayerLeaveLandEvent: [player: Player, id: LandID];
 
-    PlayerRequestChangeLandRangeBeforeEvent: [player: Player, id: LandID]
-    PlayerRequestChangeLandRangeAfterEvent: [player: Player, id: LandID]
+    PlayerRequestChangeLandRangeBeforeEvent: [player: Player, id: LandID];
+    PlayerRequestChangeLandRangeAfterEvent: [player: Player, id: LandID];
 
-    PlayerRequestCreateLandEvent: [player: Player, landType: "Ordinary" | "Parent" | "Mix" | "Sub"]
+    PlayerRequestCreateLandEvent: [
+        player: Player,
+        landType: "Ordinary" | "Parent" | "Mix" | "Sub",
+    ];
 
-    PlayerTransferLandBeforeEvent: [player: Player, id: LandID, newOwner: UUID],
-    PlayerTransferLandAfterEvent: [player: Player, id: LandID, newOwner: UUID],
+    PlayerTransferLandBeforeEvent: [player: Player, id: LandID, newOwner: UUID];
+    PlayerTransferLandAfterEvent: [player: Player, id: LandID, newOwner: UUID];
 
+    // v0.19.0+
 
-    // v0.19.x
+    LandRecycleEvent: [id: LandID, reason: LandRecycleReason];
+    LandStateChangedEvent: [
+        id: LandID,
+        oldState: LeaseState,
+        newState: LeaseState,
+    ];
 
-    LandRecycleEvent: [id: LandID, reason: LandRecycleReason],
-    LandStateChangedEvent: [id: LandID, oldState: LeaseState, newState: LeaseState],
+    MembersClearedEvent: [id: LandID];
 
-    MembersClearedEvent: [id: LandID],
-
-    PlayerLeaseLandEvent: [id: LandID, payMoney: number, days: number],
-    PlayerRenewLandEvent: [id: LandID, payMoney: number, days: number],
+    PlayerLeaseLandEvent: [id: LandID, payMoney: number, days: number];
+    PlayerRenewLandEvent: [id: LandID, payMoney: number, days: number];
 };
 
 export type EventType = keyof EventParams;

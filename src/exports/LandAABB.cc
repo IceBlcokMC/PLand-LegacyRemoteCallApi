@@ -11,15 +11,20 @@ void Export_Class_LandAABB() {
         return land::LandAABB::make(land::LandPos::make(a.first), land::LandPos::make(b.first));
     };
 
-    exportAs("LandAABB_fix", [](IntPos a, IntPos b) -> std::vector<IntPos> {
+    static auto LandAABB_canonicalizeImpl = [](IntPos a, IntPos b) -> std::vector<IntPos> {
         auto p = Make(a, b);
-        p.fix();
+        p.canonicalize();
         std::vector<IntPos> res = {
             IntPos{p.min.as(), a.second},
             IntPos{p.max.as(), b.second}
         };
         return res;
+    };
+    exportAs("LandAABB_fix", [](IntPos a, IntPos b) -> std::vector<IntPos> {
+        DEPRECATED_WARN("LandAABB_fix is deprecated, use LandAABB_canonicalize instead");
+        return LandAABB_canonicalizeImpl(a, b);
     });
+    exportAs("LandAABB_canonicalize", LandAABB_canonicalizeImpl);
 
     exportAs("LandAABB_getSpanX", [](IntPos a, IntPos b) -> int {
         auto p = Make(a, b);

@@ -5,6 +5,7 @@
 #include <string>
 #include <unordered_set>
 
+#include "mod/MyMod.h"
 
 #pragma warning(push, 0) // 禁用所有警告
 #include "RemoteCallAPI.h"
@@ -53,5 +54,30 @@ exportAs(std::string const& sym, CB&& callback, std::source_location loc = std::
     return RemoteCall::exportAs(ExportNamespace, sym, std::move(callback));
 }
 
+#define LOGGER() my_mod::MyMod::getInstance().getSelf().getLogger()
 
+#define DEPRECATED_WARN(msg) LOGGER().warn("[Deprecated] {}", msg)
+
+
+
+#ifdef _MSC_VER
+    // MSVC
+    #define SUPPRESS_DEPRECATED_BEGIN \
+        __pragma(warning(push)) \
+        __pragma(warning(disable: 4996))
+
+    #define SUPPRESS_DEPRECATED_END \
+        __pragma(warning(pop))
+#elif defined(__clang__)
+    // Clang
+    #define SUPPRESS_DEPRECATED_BEGIN \
+        _Pragma("clang diagnostic push") \
+        _Pragma("clang diagnostic ignored \"-Wdeprecated-declarations\"")
+
+    #define SUPPRESS_DEPRECATED_END \
+        _Pragma("clang diagnostic pop")
+#else
+    #define SUPPRESS_DEPRECATED_BEGIN
+    #define SUPPRESS_DEPRECATED_END
+#endif
 } // namespace ldapi

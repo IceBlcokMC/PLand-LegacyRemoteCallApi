@@ -171,11 +171,14 @@ void Export_Class_Land() {
     });
 
     exportAs("Land_getRawOwner", [&registry](int _landId) -> std::string {
+        DEPRECATED_WARN("Land_getRawOwner is deprecated, use Land_getOwner instead");
         auto land = registry.getLand(_landId);
         if (!land) {
             return "";
         }
+        SUPPRESS_DEPRECATED_BEGIN
         return land->getRawOwner();
+        SUPPRESS_DEPRECATED_END
     });
 
     exportAs("Land_getMembers", [&registry](int _landId) -> std::vector<std::string> {
@@ -278,19 +281,25 @@ void Export_Class_Land() {
     });
 
     exportAs("Land_isConvertedLand", [&registry](int _landId) -> bool {
+        DEPRECATED_WARN("Land_isConvertedLand is deprecated");
         auto land = registry.getLand(_landId);
         if (!land) {
             return false;
         }
+        SUPPRESS_DEPRECATED_BEGIN
         return land->isConvertedLand();
+        SUPPRESS_DEPRECATED_END
     });
 
     exportAs("Land_isOwnerDataIsXUID", [&registry](int _landId) -> bool {
+        DEPRECATED_WARN("Land_isOwnerDataIsXUID is deprecated");
         auto land = registry.getLand(_landId);
         if (!land) {
             return false;
         }
+        SUPPRESS_DEPRECATED_BEGIN
         return land->isOwnerDataIsXUID();
+        SUPPRESS_DEPRECATED_END
     });
 
     exportAs("Land_isCollision", [&registry](int _landId, IntPos pos, int radius) -> bool {
@@ -409,16 +418,23 @@ void Export_Class_Land() {
         return land->getNestedLevel();
     });
 
-    exportAs("Land_getPermType", [&registry](int _landId, std::string const& uuid) -> int {
-        auto land = registry.getLand(_landId);
+
+    static auto Land_getEffectiveRoleImpl = [](int _landId, std::string const& uuid) -> int {
+        auto land = land::PLand::getInstance().getLandRegistry().getLand(_landId);
         if (!land) {
             return land::INVALID_LAND_ID;
         }
         if (!mce::UUID::canParse(uuid)) {
             return land::INVALID_LAND_ID;
         }
-        return static_cast<int>(land->getPermType(mce::UUID(uuid)));
+        return static_cast<int>(land->getEffectiveRole(mce::UUID(uuid)));
+    };
+
+    exportAs("Land_getPermType", [](int _landId, std::string const& uuid) -> int {
+        DEPRECATED_WARN("Land_getPermType is deprecated, use Land_getEffectiveRole instead");
+        return Land_getEffectiveRoleImpl(_landId, uuid);
     });
+    exportAs("Land_getEffectiveRole", Land_getEffectiveRoleImpl);
 }
 
 

@@ -11,6 +11,7 @@ extern void Export_Class_LandAABB();
 extern void Export_Class_Land();
 extern void Export_LDEvents();
 extern void export_LeasingService();
+extern void ExportOtherAPI();
 
 } // namespace ldapi
 
@@ -21,7 +22,10 @@ MyMod& MyMod::getInstance() {
     static MyMod instance;
     return instance;
 }
-bool MyMod::load() { return true; }
+bool MyMod::load() {
+    void ExportOtherAPI();
+    return true;
+}
 
 bool MyMod::enable() {
 

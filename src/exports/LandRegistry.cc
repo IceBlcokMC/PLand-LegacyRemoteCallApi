@@ -86,7 +86,7 @@ void Export_Class_LandRegistry() {
             }
             auto dimId = iaabb[0].second;
             auto aabb  = toCpp<land::LandAABB>(iaabb);
-            aabb.fix();
+            aabb.canonicalize();
 
             auto land     = land::Land::make(aabb, dimId, is3D, mce::UUID{owner});
             auto expected = land::PLand::getInstance().getLandRegistry().addOrdinaryLand(land);
@@ -171,11 +171,18 @@ void Export_Class_LandRegistry() {
         return result;
     });
 
+    static auto LandRegistry_getEffectiveRoleImpl = [](std::string const& uuid, int landID, bool includeOperator) {
+        return static_cast<int>(land::PLand::getInstance().getLandRegistry().getEffectiveRole(
+            mce::UUID{uuid},
+            static_cast<land::LandID>(landID),
+            includeOperator
+        ));
+    };
     exportAs("LandRegistry_getPermType", [](std::string const& uuid, int landID, bool includeOperator) {
-        return static_cast<int>(land::PLand::getInstance()
-                                    .getLandRegistry()
-                                    .getPermType(mce::UUID{uuid}, static_cast<land::LandID>(landID), includeOperator));
+        DEPRECATED_WARN("LandRegistry_getPermType is deprecated, use LandRegistry_getEffectiveRole instead");
+        return LandRegistry_getEffectiveRoleImpl(uuid, landID, includeOperator);
     });
+    exportAs("LandRegistry_getEffectiveRole", LandRegistry_getEffectiveRoleImpl);
 
     exportAs("LandRegistry_getLandAt", [](IntPos pos) -> int {
         auto land = land::PLand::getInstance().getLandRegistry().getLandAt(pos.first, pos.second);
@@ -207,17 +214,6 @@ void Export_Class_LandRegistry() {
         auto& inst = land::PLand::getInstance().getLandRegistry();
         auto  land = inst.getLand(id);
         if (land) inst.refreshLandRange(land);
-    });
-
-    exportAs("PLand_getVersionMeta", []() -> std::string {
-        static std::string res = [] {
-            nlohmann::json j;
-            j["Commit"] = land::BuildInfo::Commit.data();
-            j["Branch"] = land::BuildInfo::Branch.data();
-            j["Tag"]    = land::BuildInfo::Tag.data();
-            return j.dump();
-        }();
-        return res;
     });
 }
 

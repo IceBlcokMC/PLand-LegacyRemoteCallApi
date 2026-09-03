@@ -5,10 +5,14 @@ import {
     isIntPos,
     LandID,
     LandPermType,
-    UUID, InternalLandAABB, FfiProtocol, asExpected,
+    UUID,
+    InternalLandAABB,
+    FfiProtocol,
+    asExpected,
 } from "../ImportDef.js";
-import {LandAABB} from "./LandAABB.js";
-import {Land} from "./Land.js";
+import { LandAABB } from "./LandAABB.js";
+import { Land } from "./Land.js";
+import { PLand_getVersionMeta } from "./Other.js";
 
 /**
  * @warning 请不要增加、删除 key，否则会导致反射失败
@@ -22,8 +26,12 @@ export class LandRegistry {
     static IMPORTS = {
         LandRegistry_isOperator: importSymbol("LandRegistry_isOperator"),
         LandRegistry_addOperator: importSymbol("LandRegistry_addOperator"),
-        LandRegistry_removeOperator: importSymbol("LandRegistry_removeOperator"),
-        LandRegistry_getOperators: importSymbol("LandRegistry_getOperators") as () => UUID[],
+        LandRegistry_removeOperator: importSymbol(
+            "LandRegistry_removeOperator",
+        ),
+        LandRegistry_getOperators: importSymbol(
+            "LandRegistry_getOperators",
+        ) as () => UUID[],
         LandRegistry_getOrCreatePlayerSettings: importSymbol(
             "LandRegistry_getOrCreatePlayerSettings",
         ),
@@ -41,13 +49,19 @@ export class LandRegistry {
         LandRegistry_refreshLandRange: importSymbol(
             "LandRegistry_refreshLandRange",
         ),
-        PLand_getVersionMeta: importSymbol("PLand_getVersionMeta"),
         LandRegistry_removeOrdinaryLand: importSymbol(
             "LandRegistry_removeOrdinaryLand",
         ) as (id: LandID) => FfiProtocol,
-        LandRegistry_addOrdinaryLand: importSymbol("LandRegistry_addOrdinaryLand") as (aabb: InternalLandAABB, is3D: boolean, owner: UUID) => FfiProtocol,
-
-        LandRegistry_createSnapshot: importSymbol("LandRegistry_createSnapshot") as (dirName?: string) => void,
+        LandRegistry_addOrdinaryLand: importSymbol(
+            "LandRegistry_addOrdinaryLand",
+        ) as (
+            aabb: InternalLandAABB,
+            is3D: boolean,
+            owner: UUID,
+        ) => FfiProtocol,
+        LandRegistry_createSnapshot: importSymbol(
+            "LandRegistry_createSnapshot",
+        ) as (dirName?: string) => void,
     };
 
     constructor() {
@@ -59,7 +73,7 @@ export class LandRegistry {
      * @param dirName 快照文件夹名称，如果为空，则使用当前时间戳
      * @note 创建的快照会被写入磁盘, snapshots/<dirName ?? timestamp>
      * @note 此任务为异步任务，如果任务未完成，文件夹下会存在 .incomplete 文件
-     * @version v0.19.x
+     * @version v0.19.0+
      */
     static createSnapshot(dirName?: string): void {
         // LegacyRemoteCall 不支持 optional，这里采用空字符串 = null、undefined
@@ -117,21 +131,16 @@ export class LandRegistry {
             is3D,
             owner,
         );
-        return asExpected<LandID>(protocol).map(id => new Land(id));
+        return asExpected<LandID>(protocol).map((id) => new Land(id));
     }
 
     /**
      * @brief 移除普通领地
      */
-    static removeOrdinaryLand(
-        land: Land | LandID,
-    ): Expected<void> {
-        const id =
-            typeof land === "number"
-                ? land
-                :
-                (land as Land).mLandId;
-        const protocol = LandRegistry.IMPORTS.LandRegistry_removeOrdinaryLand(id);
+    static removeOrdinaryLand(land: Land | LandID): Expected<void> {
+        const id = typeof land === "number" ? land : (land as Land).mLandId;
+        const protocol =
+            LandRegistry.IMPORTS.LandRegistry_removeOrdinaryLand(id);
         return asExpected<void>(protocol);
     }
 
@@ -267,6 +276,9 @@ export class LandRegistry {
         }
     }
 
+    /**
+     * @deprecated v0.22.1
+     */
     static getPermType(
         uuid: UUID,
         landID = 0,
@@ -279,17 +291,31 @@ export class LandRegistry {
         );
     }
 
+    /**
+     * @version v0.22.1+
+     */
+    static getEffectiveRole(
+        uuid: UUID,
+        landID = 0,
+        includeOperator = true,
+    ): LandPermType {
+        return importSymbol("LandRegistry_getEffectiveRole")(
+            uuid,
+            landID,
+            includeOperator,
+        );
+    }
+
     static refreshLandRange(land: Land): void {
         // @ts-ignore
         LandRegistry.IMPORTS.LandRegistry_refreshLandRange(land.unique_id);
     }
 
-    static getVersionMeta(): {
-        Commit: string;
-        Branch: string;
-        Tag: string;
-    } {
-        return JSON.parse(LandRegistry.IMPORTS.PLand_getVersionMeta());
+    /**
+     * @deprecated v0.22.1
+     */
+    static getVersionMeta() {
+        return PLand_getVersionMeta();
     }
 }
 

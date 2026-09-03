@@ -8,14 +8,15 @@ export const INVALID_LAND_ID: LandID = -1;
 
 /**
  * 领地系统账号
- * @version v0.19.x
+ * @version v0.19.0+
  */
-export const SYSTEM_ACCOUNT_UUID_STR: UUID = "deadbeef-dead-beef-dead-beefdeadbeef";
+export const SYSTEM_ACCOUNT_UUID_STR: UUID =
+    "deadbeef-dead-beef-dead-beefdeadbeef";
 
-export enum LandPermType {
+export enum LandRole {
     /**
      * 领地管理员
-     * @version v0.19.x
+     * @version v0.19.0+
      */
     Admin = 0,
 
@@ -32,13 +33,18 @@ export enum LandPermType {
     /**
      * 实体
      * Actor includes both non-member players and non-player entities (e.g., Mobs, TNT).
-     * @version v0.19.x
+     * @version v0.19.0+
      */
     Actor = 3,
 
     /** @deprecated */ Operator = 0, // 领地操作员（管理）
     /** @deprecated */ Guest = 3, // 访客
 }
+
+/**
+ * @deprecated
+ */
+export type LandPermType = LandRole;
 
 export function importSymbol(symbol: string): (...args: any[]) => any {
     return ll.imports(ImportNamespace, symbol);
@@ -52,18 +58,15 @@ export function isIntPos(obj: any): obj is IntPos {
     return obj instanceof IntPos;
 }
 
-
 export type InternalLandAABB = [min: IntPos, max: IntPos];
-
 
 // ffi
 
 export type FfiProtocol = string; // JSON
 
-export type FfiSuccess<T> =
-    T extends void
-        ? { ok: true } // void
-        : { ok: true; value: T }; // T
+export type FfiSuccess<T> = T extends void
+    ? { ok: true } // void
+    : { ok: true; value: T }; // T
 
 export type FfiFailure = { ok: false; error: string };
 
@@ -112,7 +115,10 @@ export class Expected<T> {
         return this.unwrap();
     }
 
-    map<U>(this: Expected<Exclude<T, void>>, func: (value: T) => U): Expected<U> {
+    map<U>(
+        this: Expected<Exclude<T, void>>,
+        func: (value: T) => U,
+    ): Expected<U> {
         if (!this.payload.ok) {
             return new Expected<U>(this.payload as any);
         }
@@ -121,7 +127,7 @@ export class Expected<T> {
             // T = void
             return new Expected<U>({
                 ok: true,
-                value: func(undefined as T)
+                value: func(undefined as T),
             } as FfiSuccess<U>);
         }
 
@@ -129,12 +135,12 @@ export class Expected<T> {
             const newValue = func(this.payload.value);
             return new Expected<U>({
                 ok: true,
-                value: newValue
+                value: newValue,
             } as FfiSuccess<U>);
         } catch (e: any) {
             return new Expected<U>({
                 ok: false,
-                error: e?.message ?? String(e)
+                error: e?.message ?? String(e),
             });
         }
     }

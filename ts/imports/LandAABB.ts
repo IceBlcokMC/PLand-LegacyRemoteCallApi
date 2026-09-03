@@ -1,4 +1,4 @@
-import {importSymbol, ImportNamespace} from "../ImportDef.js";
+import { importSymbol, ImportNamespace } from "../ImportDef.js";
 
 type FixedArray<T, L extends number> = [T, ...T[]] & { length: L };
 
@@ -23,9 +23,18 @@ export class LandAABB {
         LandAABB_toString: ll.imports(ImportNamespace, "LandAABB_toString"),
         LandAABB_getBorder: ll.imports(ImportNamespace, "LandAABB_getBorder"),
         LandAABB_getRange: ll.imports(ImportNamespace, "LandAABB_getRange"),
-        LandAABB_getVertices: importSymbol("LandAABB_getVertices") as (a: IntPos, b: IntPos) => FixedArray<FloatPos, 4>,
-        LandAABB_getCorners: importSymbol("LandAABB_getCorners") as (a: IntPos, b: IntPos) => FixedArray<FloatPos, 8>,
-        LandAABB_getEdges: importSymbol("LandAABB_getEdges") as (a: IntPos, b: IntPos) => Array<FixedArray<FloatPos, 2>>,
+        LandAABB_getVertices: importSymbol("LandAABB_getVertices") as (
+            a: IntPos,
+            b: IntPos,
+        ) => FixedArray<FloatPos, 4>,
+        LandAABB_getCorners: importSymbol("LandAABB_getCorners") as (
+            a: IntPos,
+            b: IntPos,
+        ) => FixedArray<FloatPos, 8>,
+        LandAABB_getEdges: importSymbol("LandAABB_getEdges") as (
+            a: IntPos,
+            b: IntPos,
+        ) => Array<FixedArray<FloatPos, 2>>,
         LandAABB_hasPos: ll.imports(ImportNamespace, "LandAABB_hasPos"),
         LandAABB_isCollision: ll.imports(
             ImportNamespace,
@@ -46,8 +55,21 @@ export class LandAABB {
         this.max = max;
     }
 
+    /**
+     * @deprecated v0.22.1
+     */
     fix() {
         const res = LandAABB.IMPORTS.LandAABB_fix(this.min, this.max);
+        this.min = res[0];
+        this.max = res[1];
+    }
+
+    /**
+     * @version v0.22.1+
+     */
+    canonicalize() {
+        const fn = importSymbol("LandAABB_canonicalize");
+        const res = fn(this.min, this.max);
         this.min = res[0];
         this.max = res[1];
     }
