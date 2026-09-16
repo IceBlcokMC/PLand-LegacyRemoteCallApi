@@ -7,6 +7,7 @@
 #include "pland/land/Land.h"
 #include "pland/land/repo/LandRegistry.h"
 #include "pland/utils/JsonUtil.h"
+#include "pland/land/repo/PlayerSettings.h"
 
 #include "mc/platform/UUID.h"
 
