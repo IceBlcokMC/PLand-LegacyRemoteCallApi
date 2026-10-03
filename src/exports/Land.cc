@@ -435,6 +435,33 @@ void Export_Class_Land() {
         return Land_getEffectiveRoleImpl(_landId, uuid);
     });
     exportAs("Land_getEffectiveRole", Land_getEffectiveRoleImpl);
+
+    exportAs("Land_getOwnershipKind", [](int id) {
+        if (auto land = land::PLand::getInstance().getLandRegistry().getLand(id)) {
+            return static_cast<int>(land->getOwnershipKind());
+        }
+        return -1;
+    });
+    exportAs("Land_isOwnerless", [](int id) {
+        if (auto land = land::PLand::getInstance().getLandRegistry().getLand(id)) {
+            return land->isOwnerless();
+        }
+        return false;
+    });
+    exportAs("Land_isPlayerOwned", [](int id) {
+        if (auto land = land::PLand::getInstance().getLandRegistry().getLand(id)) {
+            return land->isPlayerOwned();
+        }
+        return false;
+    });
+    exportAs("Land_getPreviousOwner", [](int id) -> std::string {
+        if (auto land = land::PLand::getInstance().getLandRegistry().getLand(id)) {
+            if (auto pre = land->getPreviousOwner()) {
+                return *pre;
+            }
+        }
+        return "";
+    });
 }
 
 

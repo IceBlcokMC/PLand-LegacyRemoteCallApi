@@ -22,6 +22,7 @@
 #include "pland/events/domain/LandStateChangedEvent.h"
 #include "pland/events/domain/MemberChangedEvent.h"
 #include "pland/events/domain/OwnerChangedEvent.h"
+#include "pland/events/domain/LandOwnershipChangedEvent.h"
 #include "pland/events/economy/LandRefundFailedEvent.h"
 #include "pland/events/player/PlayerApplyLandRangeChangeEvent.h"
 #include "pland/events/player/PlayerBuyLandEvent.h"
@@ -343,6 +344,16 @@ void Export_LDEvents() {
                     ev.land()->getId(),
                     ev.payMoney(),
                     ev.days()
+                );
+            }
+
+            case doHash("LandOwnershipChangedEvent"): {
+                REGISTER_LISTENER(
+                    land::event::LandOwnershipChangedEvent,
+                    (int, int, int),
+                    ev.land()->getId(),
+                    static_cast<int>(ev.oldKind()),
+                    static_cast<int>(ev.newKind())
                 );
             }
 

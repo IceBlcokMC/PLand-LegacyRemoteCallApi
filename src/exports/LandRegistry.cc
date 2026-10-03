@@ -6,8 +6,8 @@
 #include "pland/aabb/LandAABB.h"
 #include "pland/land/Land.h"
 #include "pland/land/repo/LandRegistry.h"
-#include "pland/utils/JsonUtil.h"
 #include "pland/land/repo/PlayerSettings.h"
+#include "pland/utils/JsonUtil.h"
 
 #include "mc/platform/UUID.h"
 
@@ -109,21 +109,19 @@ void Export_Class_LandRegistry() {
 
     using LandList = std::vector<land::LandID>;
     exportAs("LandRegistry_getLands", []() -> LandList {
-        auto     lands = land::PLand::getInstance().getLandRegistry().getLands();
         LandList result;
-        result.reserve(lands.size());
-        std::transform(lands.begin(), lands.end(), std::back_inserter(result), [](auto& land) {
-            return land->getId();
+        land::PLand::getInstance().getLandRegistry().forEachLand([&](std::shared_ptr<land::Land> const& land) {
+            result.push_back(land->getId());
+            return true;
         });
         return result;
     });
 
     exportAs("LandRegistry_getLands1", [](int dimid) -> LandList {
-        auto     lands = land::PLand::getInstance().getLandRegistry().getLands(dimid);
         LandList result;
-        result.reserve(lands.size());
-        std::transform(lands.begin(), lands.end(), std::back_inserter(result), [](auto& land) {
-            return land->getId();
+        land::PLand::getInstance().getLandRegistry().forEachLand(dimid, [&](std::shared_ptr<land::Land> const& land) {
+            result.push_back(land->getId());
+            return true;
         });
         return result;
     });

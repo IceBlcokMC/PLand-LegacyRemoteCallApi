@@ -1,5 +1,5 @@
 import { ImportNamespace, LandID, UUID } from "../ImportDef.js";
-import { LeaseState } from "./Land.js";
+import {LandOwnershipKind, LeaseState} from "./Land.js";
 
 /**
  * @version v0.19.0+
@@ -105,6 +105,9 @@ type EventParams = {
 
     PlayerLeaseLandEvent: [id: LandID, payMoney: number, days: number];
     PlayerRenewLandEvent: [id: LandID, payMoney: number, days: number];
+
+    /// v0.25.0+
+    LandOwnershipChangedEvent: [id: LandID, oldOwnership: LandOwnershipKind, newOwnership: LandOwnershipKind];
 };
 
 export type EventType = keyof EventParams;

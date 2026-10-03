@@ -8,7 +8,7 @@ import {
     InternalLandAABB,
     LandRole,
 } from "../ImportDef.js";
-import { LandAABB } from "./LandAABB.js";
+import {LandAABB} from "./LandAABB.js";
 
 export interface EnvironmentPerms {
     allowFireSpread: boolean; // 火焰蔓延
@@ -119,6 +119,17 @@ export enum LeaseState {
     Active = 1, // 正常期
     Frozen = 2, // 冻结期
     Expired = 3, // 已到期(已回收)
+}
+
+/**
+ * 领地归属类型
+ * @version v0.25.0+
+ */
+export enum LandOwnershipKind {
+    Player = 0, // 领地主为玩家 UUID
+    PendingMigration = 1, // 领地主为 XUID 字符串，主人上线后自动迁移为 Player
+    System = 2, // 系统所有，租赁欠费回收后归系统账号
+    Ownerless = 3, // 无主领地，由领地管理员设置，领地主为空 UUID
 }
 
 export class Land {
@@ -636,6 +647,54 @@ export class Land {
      */
     getEffectiveRole(uuid: UUID): LandRole {
         return importSymbol("Land_getEffectiveRole")(this.mLandId, uuid);
+    }
+
+    /**
+     * @brief 获取领地归属类型
+     */
+    getOwnershipKind(): LandOwnershipKind | null {
+        const fn = importSymbol("Land_getOwnershipKind");
+        const res = fn(this.mLandId);
+        if (res === -1) {
+            return null; // land not found
+        }
+        return res;
+    }
+
+    /**
+     * @brief 判断当前领地是否为无主领地
+     * @version v0.25.0+
+     */
+    isOwnerless(): boolean {
+        const fn = importSymbol("Land_isOwnerless");
+        return fn(this.mLandId);
+    }
+
+    /**
+     * @brief 判断当前领地是否由玩家持有
+     * @version v0.25.0+
+     *
+     * NOTE: 等价于归属类型为 Player
+     */
+    isPlayerOwned(): boolean {
+        const fn = importSymbol("Land_isPlayerOwned");
+        return fn(this.mLandId);
+    }
+
+    /**
+     * @brief 获取上一任领地主
+     * @version v0.25.0+
+     *
+     * NOTE: 返回值是原始存储值(可能是 XUID)，仅在归属发生变化时更新
+     * @return 从未发生过归属变更时为空
+     */
+    getPreviousOwner(): string | null {
+        const fn = importSymbol("Land_getPreviousOwner");
+        const res = fn(this.mLandId) as string;
+        if (res.length === 0) {
+            return null;
+        }
+        return res;
     }
 }
 
